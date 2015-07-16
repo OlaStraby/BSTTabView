@@ -12,6 +12,9 @@
 		6589DBC21B5662780060AE17 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6589DBC11B5662780060AE17 /* Images.xcassets */; };
 		6589DBC51B5662780060AE17 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6589DBC31B5662780060AE17 /* MainMenu.xib */; };
 		6589DBD11B5662780060AE17 /* TestTabViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6589DBD01B5662780060AE17 /* TestTabViewTests.m */; };
+		6589DBDF1B5664240060AE17 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6589DBDB1B5664240060AE17 /* MainWindow.xib */; };
+		6589DBE01B5664240060AE17 /* BSTMainWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6589DBDC1B5664240060AE17 /* BSTMainWindowController.m */; };
+		6589DBE11B5664240060AE17 /* BSTTabView.m in Sources */ = {isa = PBXBuildFile; fileRef = 6589DBDE1B5664240060AE17 /* BSTTabView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,6 +38,11 @@
 		6589DBCA1B5662780060AE17 /* TestTabViewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TestTabViewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6589DBCF1B5662780060AE17 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6589DBD01B5662780060AE17 /* TestTabViewTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestTabViewTests.m; sourceTree = "<group>"; };
+		6589DBDA1B5664240060AE17 /* BSTMainWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BSTMainWindowController.h; sourceTree = "<group>"; };
+		6589DBDB1B5664240060AE17 /* MainWindow.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainWindow.xib; sourceTree = "<group>"; };
+		6589DBDC1B5664240060AE17 /* BSTMainWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BSTMainWindowController.m; sourceTree = "<group>"; };
+		6589DBDD1B5664240060AE17 /* BSTTabView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BSTTabView.h; sourceTree = "<group>"; };
+		6589DBDE1B5664240060AE17 /* BSTTabView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BSTTabView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,6 +88,11 @@
 				6589DBBD1B5662780060AE17 /* AppDelegate.m */,
 				6589DBC11B5662780060AE17 /* Images.xcassets */,
 				6589DBC31B5662780060AE17 /* MainMenu.xib */,
+				6589DBDA1B5664240060AE17 /* BSTMainWindowController.h */,
+				6589DBDC1B5664240060AE17 /* BSTMainWindowController.m */,
+				6589DBDB1B5664240060AE17 /* MainWindow.xib */,
+				6589DBDD1B5664240060AE17 /* BSTTabView.h */,
+				6589DBDE1B5664240060AE17 /* BSTTabView.m */,
 				6589DBBA1B5662780060AE17 /* Supporting Files */,
 			);
 			path = TestTabView;
@@ -193,6 +206,7 @@
 			files = (
 				6589DBC21B5662780060AE17 /* Images.xcassets in Resources */,
 				6589DBC51B5662780060AE17 /* MainMenu.xib in Resources */,
+				6589DBDF1B5664240060AE17 /* MainWindow.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -210,7 +224,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6589DBE01B5664240060AE17 /* BSTMainWindowController.m in Sources */,
 				6589DBC01B5662780060AE17 /* main.m in Sources */,
+				6589DBE11B5664240060AE17 /* BSTTabView.m in Sources */,
 				6589DBBE1B5662780060AE17 /* AppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -401,6 +417,7 @@
 				6589DBD61B5662780060AE17 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		6589DBD71B5662780060AE17 /* Build configuration list for PBXNativeTarget "TestTabViewTests" */ = {
 			isa = XCConfigurationList;
@@ -409,6 +426,7 @@
 				6589DBD91B5662780060AE17 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
