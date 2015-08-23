@@ -19,8 +19,8 @@ within the control or externally between different controls.
 The control implemnts both a simple target-action message and an optional 
 extensive delegate protocol for interaction with its controller. 
 
-The tab view control does not implement undo, but theis can be achieved by 
+The tab view control does not implement undo, but this can be achieved by 
 the owning controller using the delegate protocol. 
 
 At present the control should be wrapped in a NSBox with type custom to correctly
-mouseDragged messages for dragging. 
+trap mouseDragged messages for dragging. 
