@@ -17,7 +17,6 @@ NSString const *BSTTabIdKey = @"BSTTABIDKEY";
 @interface BSTMainWindowController ()
 
 @property (strong,nonatomic,readwrite) IBOutlet NSBox *menuBox;
-@property (strong,nonatomic,readwrite) IBOutlet NSBox *bottomBox;
 
 @property (strong,nonatomic,readwrite) IBOutlet BSTTabController* tc1;
 @property (strong,nonatomic,readwrite) IBOutlet BSTTabController* tc2;

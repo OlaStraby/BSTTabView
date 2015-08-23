@@ -704,6 +704,15 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
 }
 
 
+-(BOOL)isOpaque{
+    return YES;
+}
+
+
+-(BOOL)mouseDownCanMoveWindow{
+    
+    return NO;
+}
 
 
 // Main drawing - draw all allways

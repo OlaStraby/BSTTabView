@@ -6,8 +6,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="BSTMainWindowController">
             <connections>
-                <outlet property="bottomBox" destination="Ih5-jr-jYQ" id="MCC-2l-5Lp"/>
-                <outlet property="box" destination="SGE-m2-vsf" id="JsE-cq-10F"/>
+                <outlet property="box" destination="SGE-m2-vsf" id="zQG-WH-E9P"/>
                 <outlet property="menuBox" destination="EY5-K1-DDb" id="l6e-14-x3K"/>
                 <outlet property="popupMenu" destination="0Cl-63-wZb" id="E0H-0l-ATP"/>
                 <outlet property="tc1" destination="HYR-Rq-dti" id="hz5-lW-4Ko"/>
@@ -65,30 +64,15 @@
                         <color key="borderColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         <color key="fillColor" name="windowFrameColor" catalog="System" colorSpace="catalog"/>
                     </box>
-                    <box autoresizesSubviews="NO" title="BottomBox" boxType="custom" borderType="none" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="Ih5-jr-jYQ">
+                    <customView translatesAutoresizingMaskIntoConstraints="NO" id="Xi3-ve-Fdx" customClass="BSTTabView">
                         <rect key="frame" x="0.0" y="0.0" width="700" height="30"/>
-                        <view key="contentView">
-                            <rect key="frame" x="0.0" y="0.0" width="700" height="30"/>
-                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                            <subviews>
-                                <customView translatesAutoresizingMaskIntoConstraints="NO" id="Xi3-ve-Fdx" customClass="BSTTabView">
-                                    <rect key="frame" x="0.0" y="0.0" width="700" height="30"/>
-                                    <connections>
-                                        <outlet property="menu" destination="0Cl-63-wZb" id="dQ9-VR-oGW"/>
-                                    </connections>
-                                </customView>
-                            </subviews>
-                        </view>
                         <constraints>
-                            <constraint firstItem="Xi3-ve-Fdx" firstAttribute="leading" secondItem="Ih5-jr-jYQ" secondAttribute="leading" id="5nY-od-FNf"/>
-                            <constraint firstItem="Xi3-ve-Fdx" firstAttribute="top" secondItem="Ih5-jr-jYQ" secondAttribute="top" id="L7B-4P-ZCY"/>
-                            <constraint firstAttribute="height" constant="30" id="l8L-5j-dv4"/>
-                            <constraint firstAttribute="trailing" secondItem="Xi3-ve-Fdx" secondAttribute="trailing" id="p33-n3-yVz"/>
-                            <constraint firstAttribute="bottom" secondItem="Xi3-ve-Fdx" secondAttribute="bottom" id="zPh-2J-MB0"/>
+                            <constraint firstAttribute="height" constant="30" id="BnF-xx-Whv"/>
                         </constraints>
-                        <color key="borderColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        <color key="fillColor" name="windowFrameColor" catalog="System" colorSpace="catalog"/>
-                    </box>
+                        <connections>
+                            <outlet property="menu" destination="0Cl-63-wZb" id="dQ9-VR-oGW"/>
+                        </connections>
+                    </customView>
                     <box autoresizesSubviews="NO" title="Box" boxType="custom" borderType="none" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="SGE-m2-vsf">
                         <rect key="frame" x="0.0" y="30" width="700" height="440"/>
                         <view key="contentView">
@@ -100,16 +84,16 @@
                     </box>
                 </subviews>
                 <constraints>
+                    <constraint firstItem="Xi3-ve-Fdx" firstAttribute="leading" secondItem="se5-gp-TjO" secondAttribute="leading" id="0hj-js-UGJ"/>
                     <constraint firstAttribute="trailing" secondItem="EY5-K1-DDb" secondAttribute="trailing" id="3eQ-mo-wIp"/>
                     <constraint firstItem="SGE-m2-vsf" firstAttribute="top" secondItem="EY5-K1-DDb" secondAttribute="bottom" id="84u-Lx-BrZ"/>
                     <constraint firstItem="EY5-K1-DDb" firstAttribute="leading" secondItem="se5-gp-TjO" secondAttribute="leading" id="9uX-Wf-AIp"/>
-                    <constraint firstAttribute="trailing" secondItem="Ih5-jr-jYQ" secondAttribute="trailing" id="LPI-Af-fdo"/>
                     <constraint firstItem="EY5-K1-DDb" firstAttribute="top" secondItem="se5-gp-TjO" secondAttribute="top" id="Lfu-wJ-410"/>
-                    <constraint firstAttribute="bottom" secondItem="Ih5-jr-jYQ" secondAttribute="bottom" id="jPN-Dw-U7v"/>
                     <constraint firstItem="SGE-m2-vsf" firstAttribute="leading" secondItem="se5-gp-TjO" secondAttribute="leading" id="jsz-Wb-WWY"/>
                     <constraint firstAttribute="trailing" secondItem="SGE-m2-vsf" secondAttribute="trailing" id="n9a-nD-Rb9"/>
-                    <constraint firstItem="Ih5-jr-jYQ" firstAttribute="leading" secondItem="se5-gp-TjO" secondAttribute="leading" id="qtB-O8-bei"/>
-                    <constraint firstItem="Ih5-jr-jYQ" firstAttribute="top" secondItem="SGE-m2-vsf" secondAttribute="bottom" id="tZJ-Mu-Ggg"/>
+                    <constraint firstAttribute="trailing" secondItem="Xi3-ve-Fdx" secondAttribute="trailing" id="o9U-Lh-srE"/>
+                    <constraint firstItem="Xi3-ve-Fdx" firstAttribute="top" secondItem="SGE-m2-vsf" secondAttribute="bottom" id="tZC-1c-1nh"/>
+                    <constraint firstAttribute="bottom" secondItem="Xi3-ve-Fdx" secondAttribute="bottom" id="xox-6A-c4J"/>
                 </constraints>
             </view>
             <connections>
