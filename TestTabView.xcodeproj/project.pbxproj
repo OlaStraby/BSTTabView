@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		27EBCA1D1B883DF0003802F7 /* BSTTabController.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EBCA1C1B883DF0003802F7 /* BSTTabController.m */; };
+		27F079DA1B89E45F0096496B /* LICENSE.md in Sources */ = {isa = PBXBuildFile; fileRef = 27F079D81B89E45F0096496B /* LICENSE.md */; };
+		27F079DB1B89E45F0096496B /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 27F079D91B89E45F0096496B /* README.md */; };
 		6589DBBE1B5662780060AE17 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6589DBBD1B5662780060AE17 /* AppDelegate.m */; };
 		6589DBC01B5662780060AE17 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6589DBBF1B5662780060AE17 /* main.m */; };
 		6589DBC21B5662780060AE17 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6589DBC11B5662780060AE17 /* Images.xcassets */; };
@@ -31,6 +33,8 @@
 /* Begin PBXFileReference section */
 		27EBCA1B1B883DF0003802F7 /* BSTTabController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BSTTabController.h; sourceTree = "<group>"; };
 		27EBCA1C1B883DF0003802F7 /* BSTTabController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BSTTabController.m; sourceTree = "<group>"; };
+		27F079D81B89E45F0096496B /* LICENSE.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = SOURCE_ROOT; };
+		27F079D91B89E45F0096496B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 		6589DBB71B5662780060AE17 /* TestTabView.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TestTabView.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6589DBBB1B5662780060AE17 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6589DBBC1B5662780060AE17 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -106,6 +110,8 @@
 		6589DBBA1B5662780060AE17 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				27F079D81B89E45F0096496B /* LICENSE.md */,
+				27F079D91B89E45F0096496B /* README.md */,
 				6589DBBB1B5662780060AE17 /* Info.plist */,
 				6589DBBF1B5662780060AE17 /* main.m */,
 			);
@@ -232,7 +238,9 @@
 				6589DBE01B5664240060AE17 /* BSTMainWindowController.m in Sources */,
 				27EBCA1D1B883DF0003802F7 /* BSTTabController.m in Sources */,
 				6589DBC01B5662780060AE17 /* main.m in Sources */,
+				27F079DB1B89E45F0096496B /* README.md in Sources */,
 				6589DBE11B5664240060AE17 /* BSTTabView.m in Sources */,
+				27F079DA1B89E45F0096496B /* LICENSE.md in Sources */,
 				6589DBBE1B5662780060AE17 /* AppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
