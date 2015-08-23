@@ -9,18 +9,22 @@
 #import "BSTMainWindowController.h"
 #import "AppDelegate.h"
 #import "BSTTabView.h"
+#import "BSTTabController.h"
 
-@interface BSTMainWindowController ()<BSTTabViewDelegate>
+NSString const *BSTTabIdKey = @"BSTTABIDKEY";
+
+
+@interface BSTMainWindowController ()
 
 @property (strong,nonatomic,readwrite) IBOutlet NSBox *menuBox;
-@property (strong,nonatomic,readwrite) IBOutlet BSTTabView *tabView;
+@property (strong,nonatomic,readwrite) IBOutlet NSBox *bottomBox;
 
-
-
--(IBAction)segmentButtonClick:(id)sender;
-
+@property (strong,nonatomic,readwrite) IBOutlet BSTTabController* tc1;
+@property (strong,nonatomic,readwrite) IBOutlet BSTTabController* tc2;
+@property (strong,nonatomic,readwrite) IBOutlet NSMenu *popupMenu;
 
 @end
+
 
 @implementation BSTMainWindowController
 
@@ -50,56 +54,63 @@
 - (void)windowDidLoad {
     [super windowDidLoad];
     
-    self.tabView.delegate = self;
-    self.tabView.topEdge = YES;
+    self.tc1.tag = @"Upper TC";
+    self.tc1.tabView.maxTabHeight = 20;
+    self.tc1.tabView.doubleClickEditEnabled = YES;
+    self.tc1.tabView.spacerWidth = 10;
+    self.tc1.tabView.tabCornerRadius = 3;
+    self.tc1.tabView.userTabDraggingEnabled = BSTTabViewDragLocal;
+    self.tc1.tabView.editingColor = [NSColor redColor];
+    self.tc1.tabView.selectedFieldColor = [NSColor yellowColor];
+    self.tc1.tabView.selectedBorderColor = [NSColor yellowColor];
     
-    [self.tabView addTabWithLabel:@"Test1"];
-    [self.tabView addTabWithLabel:@"Test2 testetet"];
-    [self.tabView addTabWithLabel:@"Test3 testetet"];
-    [self.tabView addTabWithLabel:@"Test4 testetet"];
-    [self.tabView addTabWithLabel:@"Test5 testetet"];
-    [self.tabView addTabWithLabel:@"Test6 testetet"];
-    [self.tabView addTabWithLabel:@"Test7 testetet"];
-
-
-    
-    // Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
+    self.tc2.tag = @"Lower TC";
+    self.tc2.tabView.topEdge = NO;
+    self.tc2.tabView.maxTabHeight = 20;
+    self.tc2.tabView.rolloverEnabled = NO;
+    self.tc2.tabView.spacerWidth = 10;
+    self.tc2.tabView.tabCornerRadius = 3;
+    self.tc2.tabView.userTabDraggingEnabled = BSTTabViewDragLocal;
+    self.tc2.tabView.selectedFieldColor = [NSColor whiteColor];
+    self.tc2.tabView.selectedBorderColor = [NSColor whiteColor];
+    self.tc2.tabView.editingColor = [NSColor blueColor];
 }
 
 
-#pragma mark - TabView Delegate methdos
-
--(void)spaceIsInsufficientToDisplayAllTabs {
+-(IBAction)tellTab:(id)sender{
     
-    NSLog(@"Space is insufficient message received");
-}
-
-
-
-#pragma mark - Action methods
-
--(IBAction)segmentButtonClick:(id)sender{
+    NSInteger i = [self.tc1.tabView indexForRolloverTab];
+    BSTTabController *ctc = self.tc1;
     
-    NSSegmentedControl *ctrl = (NSSegmentedControl *)sender;
+    if (i == -1) {  // Try other
+         i = [self.tc2.tabView indexForRolloverTab];
+         ctc = self.tc2;
+    }
     
-    switch (ctrl.selectedSegment) {
-        case 0:
-            NSLog(@"Option 0 called");
-            break;
-            
-        case 1:
-            NSLog(@"Option 1 called");
-            break;
-        case 2:
-            NSLog(@"Option 2 called");
-            break;
-        case 3:
-            NSLog(@"Option 3 called");
-            break;
-        default:
-            break;
+    if (i>=0) {
+        NSLog(@"Tab is %ld in %@",(long)i, ctc.tag);
+        
+    } else {
+        NSLog(@"No tab is selected");
     }
 }
+
+
+-(IBAction)removeTab:(id)sender{
+    
+    NSInteger i = [self.tc1.tabView indexForRolloverTab];
+    BSTTabController *ctc = self.tc1;
+    
+    if (i == -1) {  // Try other
+        i = [self.tc2.tabView indexForRolloverTab];
+        ctc = self.tc2;
+    }
+    
+    if (i>=0 && (![[ctc.tabView tagForTabAtIndex:i] isEqualToString:@"addKey"])) {
+        [ctc.tabView removeTabAtIndex:i];
+    }
+}
+
 
 
 @end

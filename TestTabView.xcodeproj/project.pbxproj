@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		27EBCA1D1B883DF0003802F7 /* BSTTabController.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EBCA1C1B883DF0003802F7 /* BSTTabController.m */; };
 		6589DBBE1B5662780060AE17 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6589DBBD1B5662780060AE17 /* AppDelegate.m */; };
 		6589DBC01B5662780060AE17 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6589DBBF1B5662780060AE17 /* main.m */; };
 		6589DBC21B5662780060AE17 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6589DBC11B5662780060AE17 /* Images.xcassets */; };
@@ -28,6 +29,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		27EBCA1B1B883DF0003802F7 /* BSTTabController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BSTTabController.h; sourceTree = "<group>"; };
+		27EBCA1C1B883DF0003802F7 /* BSTTabController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BSTTabController.m; sourceTree = "<group>"; };
 		6589DBB71B5662780060AE17 /* TestTabView.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TestTabView.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6589DBBB1B5662780060AE17 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6589DBBC1B5662780060AE17 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -90,6 +93,8 @@
 				6589DBC31B5662780060AE17 /* MainMenu.xib */,
 				6589DBDA1B5664240060AE17 /* BSTMainWindowController.h */,
 				6589DBDC1B5664240060AE17 /* BSTMainWindowController.m */,
+				27EBCA1B1B883DF0003802F7 /* BSTTabController.h */,
+				27EBCA1C1B883DF0003802F7 /* BSTTabController.m */,
 				6589DBDB1B5664240060AE17 /* MainWindow.xib */,
 				6589DBDD1B5664240060AE17 /* BSTTabView.h */,
 				6589DBDE1B5664240060AE17 /* BSTTabView.m */,
@@ -225,6 +230,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6589DBE01B5664240060AE17 /* BSTMainWindowController.m in Sources */,
+				27EBCA1D1B883DF0003802F7 /* BSTTabController.m in Sources */,
 				6589DBC01B5662780060AE17 /* main.m in Sources */,
 				6589DBE11B5664240060AE17 /* BSTTabView.m in Sources */,
 				6589DBBE1B5662780060AE17 /* AppDelegate.m in Sources */,

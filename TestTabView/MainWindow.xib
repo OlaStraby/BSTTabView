@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="7706" systemVersion="14E46" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="7706" systemVersion="14F27" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="7706"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="BSTMainWindowController">
             <connections>
+                <outlet property="bottomBox" destination="Ih5-jr-jYQ" id="MCC-2l-5Lp"/>
+                <outlet property="box" destination="SGE-m2-vsf" id="JsE-cq-10F"/>
                 <outlet property="menuBox" destination="EY5-K1-DDb" id="l6e-14-x3K"/>
-                <outlet property="tabView" destination="Ag9-3X-1i6" id="eKj-Cp-8AQ"/>
+                <outlet property="popupMenu" destination="0Cl-63-wZb" id="E0H-0l-ATP"/>
+                <outlet property="tc1" destination="HYR-Rq-dti" id="hz5-lW-4Ko"/>
+                <outlet property="tc2" destination="GR6-jw-h89" id="Ayk-wf-YFX"/>
                 <outlet property="window" destination="F0z-JX-Cv5" id="gIp-Ho-8D9"/>
             </connections>
         </customObject>
@@ -17,7 +21,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" texturedBackground="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="50" y="50" width="700" height="500"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
             <value key="minSize" type="size" width="600" height="400"/>
             <view key="contentView" id="se5-gp-TjO">
                 <rect key="frame" x="0.0" y="0.0" width="700" height="500"/>
@@ -30,69 +34,117 @@
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="g92-CW-Kx7">
-                                    <rect key="frame" x="486" y="2" width="194" height="25"/>
+                                    <rect key="frame" x="495" y="2" width="185" height="25"/>
                                     <segmentedCell key="cell" borderStyle="border" alignment="left" style="texturedSquare" trackingMode="momentary" id="Zrv-M8-5fw">
                                         <font key="font" metaFont="smallSystem"/>
                                         <segments>
-                                            <segment label="Curr"/>
-                                            <segment label="Exch" tag="1"/>
-                                            <segment label="Stock" tag="2"/>
-                                            <segment label="Index" tag="3"/>
+                                            <segment label="xxx1"/>
+                                            <segment label="xxx2" tag="1"/>
+                                            <segment label="xxx3" tag="2"/>
+                                            <segment label="xxx4" tag="3"/>
                                         </segments>
                                     </segmentedCell>
-                                    <connections>
-                                        <action selector="segmentButtonClick:" target="-2" id="tNw-Ys-gwf"/>
-                                    </connections>
                                 </segmentedControl>
                                 <customView translatesAutoresizingMaskIntoConstraints="NO" id="Ag9-3X-1i6" customClass="BSTTabView">
-                                    <rect key="frame" x="8" y="0.0" width="470" height="30"/>
+                                    <rect key="frame" x="8" y="0.0" width="479" height="30"/>
+                                    <connections>
+                                        <outlet property="menu" destination="0Cl-63-wZb" id="aCQ-VL-CYa"/>
+                                    </connections>
                                 </customView>
                             </subviews>
                         </view>
                         <constraints>
                             <constraint firstAttribute="trailing" secondItem="g92-CW-Kx7" secondAttribute="trailing" constant="20" id="6Dy-1u-LXs"/>
-                            <constraint firstAttribute="height" constant="30" id="Nbp-m7-o4e"/>
                             <constraint firstAttribute="bottom" secondItem="g92-CW-Kx7" secondAttribute="bottom" constant="4" id="Ssp-9j-ZC3"/>
                             <constraint firstItem="Ag9-3X-1i6" firstAttribute="leading" secondItem="EY5-K1-DDb" secondAttribute="leading" constant="8" id="fqd-bu-JYo"/>
                             <constraint firstAttribute="bottom" secondItem="Ag9-3X-1i6" secondAttribute="bottom" id="gzr-pv-X63"/>
                             <constraint firstItem="Ag9-3X-1i6" firstAttribute="top" secondItem="EY5-K1-DDb" secondAttribute="top" id="jtQ-hz-QYs"/>
+                            <constraint firstAttribute="height" constant="30" id="kaz-C9-c1u"/>
                             <constraint firstItem="g92-CW-Kx7" firstAttribute="leading" secondItem="Ag9-3X-1i6" secondAttribute="trailing" constant="8" id="zIK-Fo-oLq"/>
                         </constraints>
                         <color key="borderColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         <color key="fillColor" name="windowFrameColor" catalog="System" colorSpace="catalog"/>
                     </box>
-                    <splitView dividerStyle="thin" vertical="YES" translatesAutoresizingMaskIntoConstraints="NO" id="HAx-Ip-afZ">
-                        <rect key="frame" x="0.0" y="0.0" width="700" height="470"/>
-                        <subviews>
-                            <customView fixedFrame="YES" id="dt8-OG-2EQ">
-                                <rect key="frame" x="0.0" y="0.0" width="239" height="470"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                            </customView>
-                            <customView fixedFrame="YES" id="SXI-q8-weo">
-                                <rect key="frame" x="240" y="0.0" width="460" height="470"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                            </customView>
-                        </subviews>
-                        <holdingPriorities>
-                            <real value="250"/>
-                            <real value="250"/>
-                        </holdingPriorities>
-                    </splitView>
+                    <box autoresizesSubviews="NO" title="BottomBox" boxType="custom" borderType="none" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="Ih5-jr-jYQ">
+                        <rect key="frame" x="0.0" y="0.0" width="700" height="30"/>
+                        <view key="contentView">
+                            <rect key="frame" x="0.0" y="0.0" width="700" height="30"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <subviews>
+                                <customView translatesAutoresizingMaskIntoConstraints="NO" id="Xi3-ve-Fdx" customClass="BSTTabView">
+                                    <rect key="frame" x="0.0" y="0.0" width="700" height="30"/>
+                                    <connections>
+                                        <outlet property="menu" destination="0Cl-63-wZb" id="dQ9-VR-oGW"/>
+                                    </connections>
+                                </customView>
+                            </subviews>
+                        </view>
+                        <constraints>
+                            <constraint firstItem="Xi3-ve-Fdx" firstAttribute="leading" secondItem="Ih5-jr-jYQ" secondAttribute="leading" id="5nY-od-FNf"/>
+                            <constraint firstItem="Xi3-ve-Fdx" firstAttribute="top" secondItem="Ih5-jr-jYQ" secondAttribute="top" id="L7B-4P-ZCY"/>
+                            <constraint firstAttribute="height" constant="30" id="l8L-5j-dv4"/>
+                            <constraint firstAttribute="trailing" secondItem="Xi3-ve-Fdx" secondAttribute="trailing" id="p33-n3-yVz"/>
+                            <constraint firstAttribute="bottom" secondItem="Xi3-ve-Fdx" secondAttribute="bottom" id="zPh-2J-MB0"/>
+                        </constraints>
+                        <color key="borderColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        <color key="fillColor" name="windowFrameColor" catalog="System" colorSpace="catalog"/>
+                    </box>
+                    <box autoresizesSubviews="NO" title="Box" boxType="custom" borderType="none" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="SGE-m2-vsf">
+                        <rect key="frame" x="0.0" y="30" width="700" height="440"/>
+                        <view key="contentView">
+                            <rect key="frame" x="0.0" y="0.0" width="700" height="440"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        </view>
+                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
+                        <color key="fillColor" name="selectedTextBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </box>
                 </subviews>
                 <constraints>
                     <constraint firstAttribute="trailing" secondItem="EY5-K1-DDb" secondAttribute="trailing" id="3eQ-mo-wIp"/>
+                    <constraint firstItem="SGE-m2-vsf" firstAttribute="top" secondItem="EY5-K1-DDb" secondAttribute="bottom" id="84u-Lx-BrZ"/>
                     <constraint firstItem="EY5-K1-DDb" firstAttribute="leading" secondItem="se5-gp-TjO" secondAttribute="leading" id="9uX-Wf-AIp"/>
-                    <constraint firstItem="HAx-Ip-afZ" firstAttribute="leading" secondItem="se5-gp-TjO" secondAttribute="leading" id="C0S-FH-rcQ"/>
-                    <constraint firstAttribute="bottom" secondItem="HAx-Ip-afZ" secondAttribute="bottom" id="FOZ-Y2-RC5"/>
+                    <constraint firstAttribute="trailing" secondItem="Ih5-jr-jYQ" secondAttribute="trailing" id="LPI-Af-fdo"/>
                     <constraint firstItem="EY5-K1-DDb" firstAttribute="top" secondItem="se5-gp-TjO" secondAttribute="top" id="Lfu-wJ-410"/>
-                    <constraint firstItem="HAx-Ip-afZ" firstAttribute="top" secondItem="EY5-K1-DDb" secondAttribute="bottom" id="hJB-Kt-dIv"/>
-                    <constraint firstAttribute="trailing" secondItem="HAx-Ip-afZ" secondAttribute="trailing" id="tC6-VU-0O8"/>
+                    <constraint firstAttribute="bottom" secondItem="Ih5-jr-jYQ" secondAttribute="bottom" id="jPN-Dw-U7v"/>
+                    <constraint firstItem="SGE-m2-vsf" firstAttribute="leading" secondItem="se5-gp-TjO" secondAttribute="leading" id="jsz-Wb-WWY"/>
+                    <constraint firstAttribute="trailing" secondItem="SGE-m2-vsf" secondAttribute="trailing" id="n9a-nD-Rb9"/>
+                    <constraint firstItem="Ih5-jr-jYQ" firstAttribute="leading" secondItem="se5-gp-TjO" secondAttribute="leading" id="qtB-O8-bei"/>
+                    <constraint firstItem="Ih5-jr-jYQ" firstAttribute="top" secondItem="SGE-m2-vsf" secondAttribute="bottom" id="tZJ-Mu-Ggg"/>
                 </constraints>
             </view>
             <connections>
                 <outlet property="delegate" destination="-2" id="0bl-1N-AYu"/>
             </connections>
-            <point key="canvasLocation" x="75" y="352"/>
+            <point key="canvasLocation" x="-26" y="81"/>
         </window>
+        <menu id="0Cl-63-wZb" userLabel="TestMenu">
+            <items>
+                <menuItem title="Remove" id="tv8-qY-MPX">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="removeTab:" target="-1" id="a9a-DS-mXk"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Tell tab" id="PBZ-kZ-jIz">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="tellTab:" target="-1" id="qlG-oD-yfK"/>
+                    </connections>
+                </menuItem>
+            </items>
+            <point key="canvasLocation" x="595" y="259.5"/>
+        </menu>
+        <customObject id="HYR-Rq-dti" userLabel="UpperTabs" customClass="BSTTabController">
+            <connections>
+                <outlet property="owner" destination="-2" id="END-Wb-dXx"/>
+                <outlet property="tabView" destination="Ag9-3X-1i6" id="iJV-Yu-j92"/>
+            </connections>
+        </customObject>
+        <customObject id="GR6-jw-h89" userLabel="LowerTabs" customClass="BSTTabController">
+            <connections>
+                <outlet property="owner" destination="-2" id="70B-68-oq8"/>
+                <outlet property="tabView" destination="Xi3-ve-Fdx" id="4xv-Wj-0x4"/>
+            </connections>
+        </customObject>
     </objects>
 </document>

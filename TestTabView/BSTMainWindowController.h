@@ -10,5 +10,9 @@
 
 @interface BSTMainWindowController : NSWindowController
 
+-(IBAction)tellTab:(id)sender;   // Responder to menu actions
+-(IBAction)removeTab:(id)sender; // Responder to menu actions
+
+@property (strong, nonatomic) IBOutlet NSBox* box;
 
 @end

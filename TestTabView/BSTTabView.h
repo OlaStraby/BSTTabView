@@ -8,10 +8,17 @@
 
 #import <Cocoa/Cocoa.h>
 
+
+
 /**
  * The delegate protocol for the BSTTabView custom control. The delegate pattern is the main
- * mechanism fro feedback from the control. The control do not support binding or notifications
+ * mechanism for feedback from the control. The control do not support binding or notifications
  * but KVO should work (not extensively tested)
+ *
+ * There are no checks with delegate ethoids before insert or delete actions. This is because these
+ * are always initiated by direct calls from the controller of the BSTTabView with the exception of
+ * drags between controlds (where allowed). In thse instances there are delegate methods that will allow
+ * the controller to prevent the drag and react to the new tab inserted. 
  */
 
 @protocol BSTTabViewDelegate <NSObject>
@@ -19,7 +26,7 @@
 @optional
 /**
  * Method called before the selected tab is changed, return NO to deny the change
- 
+ *
  * @param index The index of the tab that will become selected, -1 if no tab will be selected
  *
  * @return YES if delegte accepts the change and NO if the change should be prevented
@@ -29,7 +36,7 @@
 
 /**
  * Method called after the selected tab is changed.
- 
+ *
  * @param index The index of the tab that became selected, -1 if no tab will be selected
  */
 -(void)tabWithIndexDidBecomeSelected:(NSInteger)index;
@@ -38,13 +45,14 @@
 /**
  * Method called when the index of the selected tab is changed but remains the same tab.
  * i.e. if a new tab is inserted before the current tab. 
- * Note in general the window controller should not have to keep track of teh indexes. 
+ * Note in general the window controller should not have to keep track of the indexes.
  * it is better to store the identity of each tab in an userData struct and only react to
- * tabWithIndexDidBecomeSelecred: callbacks
+ * tabWithIndexDidBecomeSelected: callbacks
  *
  * @param index The new index of the selected tab
  */
 -(void)selectedTabChangedIndexTo:(NSInteger)index;
+
 
 /**
  * Method called before a tab label is changed, return NO to deny the change
@@ -62,13 +70,12 @@
  
  * @param index The index of the tab that changed
  *
- * @return YES if delegte accepts the change and NO if the change should be prevented
  */
--(BOOL)labelDidChangeForTabAtIndex:(NSUInteger)index;
+-(void)labelDidChangeForTabAtIndex:(NSUInteger)index;
 
 
 /**
- * Method that is called if there is insifficient space to display even compressed versionsm of the tabs
+ * Method that is called if there is insufficient space to display even compressed versionsm of the tabs
  * The BSTTabVie control has no further mechanism to deal with this beyond displaying as many tabs as possible
  * and then truncating. There is no guarantee the selected tab vill be visible
  *
@@ -77,11 +84,72 @@
  
 
 
+/**
+ * Method called before interactive editing of a tab label is begun, return NO to deny editing
+ *
+ * @param index The index of the tab that will change
+ * @param newLabel The intended new label of the tab
+ *
+ * @return YES if delegte accepts the change and NO if the change should be prevented
+ */
+-(BOOL)editingWillBeginForTabAtIndex:(NSUInteger)index;
+
+
+/**
+ * Method called on the dragging source delegate before a dragging of a tab begins, return NO to deny dragging this tab
+ *
+ * @param index The index of the tab that will be inserted
+ * @param label The label of the dragged tab
+ * @param tag The tag string of the dragged tab
+ * @param external YES if the source is from another application and NO if from within this application
+ * but not neccessarily from same control
+ *
+ * @return YES if delegte accepts the drag and NO if the drag should be prevented
+ */
+-(BOOL)draggingWillBeginForTabWithIndex:(NSUInteger)index;
+
+
+/**
+ * Method called on the dragging source delegate after dragging of a tab concludes.
+ *
+ * @param label The label of the tab that was dragged
+ * @param tag The tag of the tab that was dragged
+ * @param success YES if the drag was successful and NO if it was reveresed
+ *
+ */
+-(void)draggingFinishedForTabWithLabel:(NSString *)label tag:(NSString *)tag success:(BOOL)success;
+
+
+
+/**
+ * Method called before a dragged tab is inserted, return NO to deny the insert
+ *
+ * @param index The index of the tab that will be inserted
+ * @param label The label of the dragged tab
+ * @param tag The tag string of the dragged tab
+ * @param external YES if the source is from another application and NO if from within this application 
+ * but not neccessarily from same control
+ *
+ * @return YES if delegte accepts the drag and NO if the drag should be prevented
+ */
+-(BOOL)draggedTabWillBeInsertedAtIndex:(NSUInteger)index withLabel:(NSString *)label tag:(NSString *)tag sourceExternal:(BOOL)external;
+
+
+
 @end
 
 
 
 
+
+
+
+typedef NS_ENUM(NSInteger, BSTTabViewDragOptions) {
+    BSTTabViewDragNone,
+    BSTTabViewDragInternal,
+    BSTTabViewDragLocal,
+    BSTTabViewDragGlobal
+};
 
 /**
  * The BSTTabView is a custom control that implements a tab band to be located at the top or bottom of another control
@@ -91,21 +159,60 @@
  * Doubleclicking enables edit of the tab label
  * The tabView also implements rollovers and custom colors
  * The tabView can be initialised from a nib or by init. In both cases all settings are configured to default as per below.
+ * The tab view control do not implement undo
  */
 
 @interface BSTTabView : NSView
 
-/**
- * property selectedTab is read only that report the index of the currently selected tab
- */
-@property (readonly, nonatomic) NSInteger selectedTab;
 
+/**
+ * property count reflects the number of tabs in the tabView */
+@property (readonly, nonatomic) NSUInteger count;
+
+
+/**
+ * property selectedTab that reflect the index of the currently selected tab
+ */
+@property (readwrite, nonatomic) NSInteger selectedTab;
+
+
+/**
+ * The target property defines the control's target for action message
+ */
+@property (readwrite, nonatomic, weak)id target;
+
+
+/**
+ * The action property defines the control's action message, which is sent to the target
+ * upon receipt of this action it is possible to query which tab was clicked by polling for the
+ * selected tab or for current rollover, the latter enables detection of a click outside
+ * the tabs in teh control area and is the recommended way
+ */
+@property (readwrite, nonatomic)SEL action;
+
+
+/**
+ * property lastClickedTab that reflect the index of the last clicked tab or -1 if last click in control was outside any tab
+ * This property can be polled after the reception of the target-action message
+ * The value of this property is undefined at any other time than directly after a target -action
+ * message call.
+ */
+@property (readonly, nonatomic) NSInteger lastClickedTab;
+
+
+/**
+ * property clickCount that reflect the nymber of quick repetitive clicks last detected. 
+ * This property can be polled after the reception of the target-action message
+ * The value of this property is undefined at any other time than directly after a target -action
+ * message call.
+ */
+@property (readonly, nonatomic) NSInteger clickCount;
 
 
 /**
  * property delegate allows setting and object to receive the callback functions in the BSTTabViewDelegate protocol.
  */
-@property (readwrite, nonatomic, strong) id<BSTTabViewDelegate> delegate;
+@property (readwrite, nonatomic, weak) id<BSTTabViewDelegate> delegate;
 
 
 /**
@@ -127,6 +234,18 @@
 
 @property (readwrite, nonatomic) BOOL doubleClickEditEnabled;
 
+/**
+ * property userTabDraggingEnabled is a boolean that defines if drag and drop to rearrange tabs is allowed, default to 0
+ * 
+ * State is as follows
+ * BSTTabViewDragNone - no user dragging allowed
+ * BSTTabViewDragInternal - user dragging within control allowed
+ * BSTTabViewDragLocal - User dragging within same application allowed
+ * BSTTabViewDragGlobal - User dragging allowed also between apps
+ */
+
+@property (readwrite, nonatomic) BSTTabViewDragOptions userTabDraggingEnabled;
+
 
 
 /**
@@ -136,9 +255,10 @@
 @property (readwrite, nonatomic) CGFloat spacerWidth;
 
 /**
- * The tabHeight property defines the height of each tab in the band. Deafult is control height - 5.0
+ * The maxTabHeight property defines the max height of each tab in the band. Deafult is control height - 5.0. When space is 
+ * insufficuent tabs become control height
  */
-@property (readwrite, nonatomic) CGFloat tabHeight;
+@property (readwrite, nonatomic) CGFloat maxTabHeight;
 
 /**
  * The tabCornerRadius property defines the corner rounding of each tab in the band. 0.0 creates sharp corners.
@@ -182,19 +302,28 @@
 
 
 /**
- * The rolloverFieldColor color property defines the background color of the selected tab, default is controlHighlightColor
+ * The rolloverFieldColor color property defines the background color of the rollover tab, default is controlHighlightColor
  */
 @property (readwrite, nonatomic, strong)NSColor *rolloverFieldColor;
 
 /**
- * The selectedBorderColor color property defines the edge outline color of the selected tab, default is controlHighlightColor
+ * The rolloverBorderColor color property defines the edge outline color of the rollover tab, default is controlHighlightColor
  */
 @property (readwrite, nonatomic, strong)NSColor *rolloverBorderColor;
 
 /**
- * The selectedTextColor color property defines the text color of the selected tab, default is controlShadowColor
+ * The rolloverTextColor color property defines the text color of the rollover tab, default is controlShadowColor
  */
 @property (readwrite, nonatomic, strong)NSColor *rolloverTextColor;
+
+
+/**
+ * The editingColor color property defines the color of interactive text edits and drag insert marks, default is black
+ */
+@property (readwrite, nonatomic, strong)NSColor *editingColor;
+
+
+
 
 
 /**
@@ -202,10 +331,10 @@
  * 
  * @param label The text label of teh new tab
  *
- * @return the index of the new tab
+ * @return the index of the new tab -1 if insert failed
  */
 
--(NSUInteger)addTabWithLabel:(NSString *)label;
+-(NSInteger)addTabWithLabel:(NSString *)label tag:(NSString *)tag;
 
 /**
  * Method to add a new tab at a specific index in the tab list. Tabs after the new tab will have their
@@ -214,9 +343,9 @@
  * @param label The text label of the new tab
  * @param requestedIndex The desired index of the new tab
  *
- * @return the index allocated to the new tab
+ * @return the index allocated to the new tab -1 if failed
  */
--(NSUInteger)addTabWithLabel:(NSString *)label atIndex:(NSUInteger)requestedIndex;
+-(NSInteger)addTabWithLabel:(NSString *)label tag:(NSString *)tag atIndex:(NSUInteger)requestedIndex;
 
 
 /**
@@ -281,24 +410,33 @@
 
 
 /**
- * Method to return an userInfo dictionary associated with the tab at index. If index does not exist then the nil will be returned
+ * Method to return the tag string associated with the tab at index. If index does not exist then the nil will be returned
  
  * @param index The index of the tab to be queried
  *
- * @return the userInfo dictionary of the tab or nil if index do not exist.
+ * @return the tag string of the tab or nil if index do not exist.
  */
--(NSDictionary *)userInfoForTabAtIndex:(NSUInteger)index;
+-(NSString *)tagForTabAtIndex:(NSUInteger)index;
 
 
 /**
- * Method to set an userInfo dictionary associated with the tab at index. If index does not exist then NO will be returned
+ * Method to set a tag associated with the tab at index. If index does not exist then NO will be returned
  
  * @param index The index of the tab to be queried
- * @param userInfo The dictionary to be stored with the tab
+ * @param tag The string to be stored with the tab
  *
- * @return the userInfo dictionary of the tab or nil if index do not exist.
+ * @return YES if suvccessful or NO if tab with index do not exist.
  */
--(BOOL)setUserInfo:(NSDictionary *)userInfo ForTabAtIndex:(NSUInteger)index;
+-(BOOL)setTag:(NSString *)tag ForTabAtIndex:(NSUInteger)index;
+
+
+
+/**
+ * Method to return the index of the tab the mouse pointer is currently hovering over. If none then -1 will be returned
+ *
+ * @return the index of the tab the mouse pointer is hovering over or -1 if none.
+ */
+-(NSInteger)indexForRolloverTab;
 
 
 @end
