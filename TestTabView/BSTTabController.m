@@ -102,7 +102,7 @@
     
     NSString *dict = [self.tabView tagForTabAtIndex:index];
     if (dict && [dict isEqualToString:@"addKey"]) {  // The + tab was clicked
-        
+        NSLog(@"Denied - no drag of add key");
         return NO;  // Dont drag + tab
     }
     return YES;

@@ -32,7 +32,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
     
     // State managing variables for drag source
     NSEvent*                             dragStartMouseEvent;      // The start mouse event
-    BOOL                                 dragInProgress;           // flag in source if drag is in progress - see notes in drag methods about use
+    BOOL                                 deleteTabOnSuccessfulDrag;// flag in source to say if tab is to be deleted on successful drag
     BSTTabViewTab*                       dragSourceTab;            // The tab in source beeing dragged, nil if no drag in progress
     
     // State managing variables for drag destination
@@ -389,7 +389,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
     currentHeight = self.bounds.size.height;
     
     dragImage = [self createDragImage];
-    dragInProgress = NO;
+    dragSourceTab = nil;
     validDragInDest = NO;
     [self registerForDraggedTypes:[NSArray arrayWithObject:NSStringPboardType]];
 
@@ -968,7 +968,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
 -(void)mouseDragged:(NSEvent *)theEvent {
     
     // Used for initiating dragging after some distance (2)
-    if ((!dragInProgress) && (self.userTabDraggingEnabled > BSTTabViewDragNone) && self.currentRollover) {   // Investiage if a drag should start
+    if ((!dragSourceTab) && (self.userTabDraggingEnabled > BSTTabViewDragNone) && self.currentRollover) {   // Investiage if a drag should start
         
         CGFloat deltX = [dragStartMouseEvent locationInWindow].x - [theEvent locationInWindow].x;
         CGFloat deltY = [dragStartMouseEvent locationInWindow].y - [theEvent locationInWindow].y;
@@ -991,7 +991,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
             [di setDraggingFrame:r contents:dragImage];
 
             dragSourceTab = self.currentRollover;
-            dragInProgress = YES;
+            deleteTabOnSuccessfulDrag = YES;
             [self beginDraggingSessionWithItems:[NSArray arrayWithObject:di] event:dragStartMouseEvent source:self];
         }
     }
@@ -1300,7 +1300,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
     
     BOOL success = (operation == NSDragOperationMove ? YES : NO);
 
-    if (success && dragInProgress) {  // The move eas successful and the insert and remove operation has not been short circuited
+    if (success && deleteTabOnSuccessfulDrag) {  // The move eas successful and the insert and remove operation is not in same control
 
         [self removeTabAtIndex:[self.tabs indexOfObject:dragSourceTab]];
     }
@@ -1311,7 +1311,6 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
     }
 
     dragSourceTab = nil;
-    dragInProgress = NO;
     dragStartMouseEvent = nil;
     self.LayoutIsInvalid = YES;
     [self setNeedsDisplay:YES];
@@ -1435,18 +1434,25 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
 
 -(BOOL)prepareForDragOperation:(id<NSDraggingInfo>)sender {
     
+    
     NSArray *ar = [sender.draggingPasteboard readObjectsForClasses:[NSArray arrayWithObject:[NSString class]] options:nil];
 
     if (( ar.count != 1 ) || (![self validateDragString:(NSString *)[ar firstObject]])) {  // Something is wrong, there should be one and only one valid string on the pasteboard
-//        validDragInDest = NO;  // unset the state variable if we are going to deny drag
+        validDragInDest = NO;  // unset the state variable if we are going to deny drag
         [self setNeedsDisplay:YES];
+
         return NO;
     }
     
     // There is a valid dragString - Ask delegate if ok to insert
     NSString *ds =[ar firstObject];
     if (self.delegate && [self.delegate respondsToSelector:@selector(tabView:draggedTabWillBeInsertedWithIndex:label:tag:sourceExternal:)]) {
-        return [self.delegate tabView:self draggedTabWillBeInsertedWithIndex:(dragInsertPoint+1) label:[self labelFromDragString:ds] tag:[self tagFromDragString:ds] sourceExternal:([sender draggingSource] ? NO : YES)];
+        if (![self.delegate tabView:self draggedTabWillBeInsertedWithIndex:(dragInsertPoint+1) label:[self labelFromDragString:ds] tag:[self tagFromDragString:ds] sourceExternal:([sender draggingSource] ? NO : YES)]) {
+            validDragInDest = NO;  // unset the state variable if we are going to deny drag
+            [self setNeedsDisplay:YES];
+
+            return NO;
+        };
     }
     
     return YES;  // Default return if no delegate method
@@ -1467,7 +1473,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
         NSInteger to =(dragInsertPoint+1);
         
         [self moveTabAtIndex:frm toIndex:(to > frm ? (to - 1) : to)]; 
-        dragInProgress = NO; // Flag the sender (== self) that no delete is needed
+        deleteTabOnSuccessfulDrag = NO; // Flag the sender (== self) that no delete is needed
         
     }
     else { // Do a proper new insert and assume the sender will do a delete
