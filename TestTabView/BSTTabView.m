@@ -10,7 +10,7 @@
 
 @class           BSTTabViewTab;
 
-NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
+NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length must not change, some methods have the length of this string hard coded
 
 #define          MINTABWIDTH           15.0
 #define          STDYOFFSET             2.0
@@ -41,7 +41,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     NSInteger                            dragInsertPoint;          // Position of visal cue for drag insert (after tab with number dragInsertPoint or before first if -1, any other value means invalid/no insert point)
 }
 
-// private properties used by the helper class BSTTabViewTab
+// private properties called on by the helper class BSTTabViewTab
 @property (nonatomic) NSDictionary *defaultTextOptions;
 @property (nonatomic) NSDictionary *selectedTextOptions;
 @property (nonatomic) NSDictionary *rolloverTextOptions;
@@ -51,7 +51,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
 
 // State tracking properties
 @property (nonatomic, weak) BSTTabViewTab *currentRollover;                     // Reference to currently hovered over tab
-@property (nonatomic) BOOL geometryIsInvalid;                                   // Flag to require recalculation of widths on next redraw
+@property (nonatomic) BOOL LayoutIsInvalid;                                   // Flag to require recalculation of widths on next redraw
 
 // The array of tabs
 @property (nonatomic) NSMutableArray *tabs;                                     // The array of tabs
@@ -59,7 +59,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
 
 // Private methods used internally
 -(NSInteger)moveTabAtIndex:(NSUInteger)fromIndex toIndex: (NSUInteger)toIndex;  // Move a tab - could be consdered to be made public
--(void)reassignTabPoistionAndTrackingArea;                                      // Reallocate width, start coordinates and tracking areas for all tabs
+-(void)reassignTabPositionAndTrackingArea;                                      // Reallocate width, start coordinates and tracking areas for all tabs
 -(CGFloat)widthForLabelOrEditorForTab:(BSTTabViewTab *)tab;                     // The preferred width that is suffient for both label and field editor
 -(BOOL)beginEditLabelInteractiveForTab:(NSInteger)index;                        // Edit the label interactively using the window field editor
 
@@ -362,15 +362,23 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     
     _backgroundColor = [NSColor windowFrameColor];
     _borderColor = [NSColor gridColor];
-    [self setTextColorPrimitive:_borderColor];  // also sets the _defaultTextOptions
+    _defaultTextOptions = @{NSFontAttributeName            : _textFont ,
+                            NSForegroundColorAttributeName : _borderColor ,
+                            NSParagraphStyleAttributeName  : style};
     
     _selectedFieldColor = [NSColor highlightColor];
     _selectedBorderColor = _selectedFieldColor;
-    [self setSelectedTextColorPrimitive:[NSColor controlShadowColor]];
+    _selectedTextOptions = @{NSFontAttributeName            : _textFont  ,
+                             NSForegroundColorAttributeName : [NSColor controlShadowColor],
+                             NSParagraphStyleAttributeName  : style};
+
     
     _rolloverFieldColor = [NSColor controlHighlightColor];
     _rolloverBorderColor = _rolloverFieldColor;
-    [self setRolloverTextColorPrimitive:[NSColor controlShadowColor]];
+    _rolloverTextOptions = @{NSFontAttributeName            : _textFont ,
+                             NSForegroundColorAttributeName : [NSColor controlShadowColor] ,
+                             NSParagraphStyleAttributeName  : style};
+
     
     _editingColor = [NSColor blackColor];
     
@@ -385,7 +393,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     validDragInDest = NO;
     [self registerForDraggedTypes:[NSArray arrayWithObject:NSStringPboardType]];
 
-    _geometryIsInvalid = YES;
+    _LayoutIsInvalid = YES;
 }
 
 
@@ -455,7 +463,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
 
 -(void)setTabHeight:(CGFloat)tabHeight {
     
-    // Called from the draw routine so must not do setNeedsDisplay:YES here. Any other caller to this method should do so.
+    // Called from the draw routine so must not do setNeedsDisplay:YES here. All other callers to this method should do so.
     // Not the user facing method is setMaxtabHeight:
     
     CGFloat newHt = (tabHeight > self.bounds.size.height ? self.bounds.size.height : tabHeight);
@@ -464,7 +472,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     }
     _tabHeight = newHt;
     
-    self.geometryIsInvalid = YES;
+    self.LayoutIsInvalid = YES;
 }
 
 
@@ -481,6 +489,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     }
     _tabCornerRadius = r;
     
+    self.LayoutIsInvalid = YES;
     [self setNeedsDisplay:YES];
 }
 
@@ -509,15 +518,23 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
 }
 
 
+-(NSColor *)textColor{
+    
+    return [self.defaultTextOptions valueForKey:NSForegroundColorAttributeName];
+}
+
 
 -(void)setTextColor:(NSColor *)textColor {
     
-    if ([textColor isEqual: _textColor]) {
+    if ([textColor isEqual: self.textColor]) {
         return;  // No change
     }
     
-    [self setTextColorPrimitive:textColor];
-    
+    NSDictionary *dict = @{NSFontAttributeName             :[self.defaultTextOptions valueForKey:NSFontAttributeName],
+                           NSForegroundColorAttributeName  :textColor,
+                           NSParagraphStyleAttributeName   :[self.defaultTextOptions valueForKey:NSParagraphStyleAttributeName]
+                           };
+    self.defaultTextOptions = dict;
     [self setNeedsDisplay:YES];
 }
 
@@ -551,14 +568,23 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
 
 
 
+-(NSColor *)selectedTextColor{
+    
+    return [self.selectedTextOptions valueForKey:NSForegroundColorAttributeName];
+}
+
+
 -(void)setSelectedTextColor:(NSColor *)selectedTextColor {
     
-    if ([selectedTextColor isEqual: _selectedTextColor]) {
+    if ([selectedTextColor isEqual: self.selectedTextColor]) {
         return;  // No change
     }
     
-    [self setSelectedTextColorPrimitive:selectedTextColor ];
-    
+    NSDictionary *dict = @{NSFontAttributeName             :[self.selectedTextOptions valueForKey:NSFontAttributeName],
+                           NSForegroundColorAttributeName  :selectedTextColor ,
+                           NSParagraphStyleAttributeName   :[self.selectedTextOptions valueForKey:NSParagraphStyleAttributeName]
+                           };
+    self.selectedTextOptions = dict;
     [self setNeedsDisplay:YES];
 }
 
@@ -587,51 +613,25 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     [self setNeedsDisplay:YES];
 }
 
+-(NSColor *)rolloverTextColor{
+    
+    return [self.rolloverTextOptions valueForKey:NSForegroundColorAttributeName];
+}
 
 
 -(void)setRolloverTextColor:(NSColor *)rolloverTextColor {
     
-    if ([rolloverTextColor isEqual: _rolloverTextColor]) {
+    if ([rolloverTextColor isEqual: self.rolloverTextColor]) {
         return;  // No change
     }
     
-    [self setRolloverTextColorPrimitive:rolloverTextColor];
-    
+    NSDictionary *dict = @{NSFontAttributeName             :[self.rolloverTextOptions valueForKey:NSFontAttributeName],
+                           NSForegroundColorAttributeName  :rolloverTextColor ,
+                           NSParagraphStyleAttributeName   :[self.rolloverTextOptions valueForKey:NSParagraphStyleAttributeName]
+                        };
+    self.rolloverTextOptions = dict;
     [self setNeedsDisplay:YES];
 }
-
-
-
-// Sets both the text color ivar and the member in the textOptions dictionary
--(void)setTextColorPrimitive:(NSColor *)color {
-    
-    
-    _defaultTextOptions = @{NSFontAttributeName            : _textFont ,
-                            NSForegroundColorAttributeName : color ,
-                            NSParagraphStyleAttributeName  : style};
-    _textColor = color;
-}
-
-
--(void)setSelectedTextColorPrimitive:(NSColor *)color {
-    
-    
-    _selectedTextOptions = @{NSFontAttributeName            : _textFont  ,
-                             NSForegroundColorAttributeName : color ,
-                             NSParagraphStyleAttributeName  : style};
-    _selectedTextColor = color;
-}
-
-
--(void)setRolloverTextColorPrimitive:(NSColor *)color {
-    
-    
-    _rolloverTextOptions = @{NSFontAttributeName            : _textFont ,
-                             NSForegroundColorAttributeName : color ,
-                             NSParagraphStyleAttributeName  : style};
-    _rolloverTextColor = color;
-}
-
 
 
 
@@ -664,7 +664,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
 
 -(void)setCurrentRollover:(BSTTabViewTab *)currentRollover {
     
-    if (currentRollover) {  // Set a rollover tab
+    if (currentRollover) {
         
         if ([_currentRollover isEqual:currentRollover]) { // No change
             return;
@@ -672,9 +672,10 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
         _currentRollover = currentRollover;
         [self setNeedsDisplay:YES];
         
-    } else {   // unsetting the rollover
+    }
+    else {  // set to nil
         
-        if (!_currentRollover) {  // Not the rollover tab is not currently set - do not unset
+        if (!_currentRollover) {
             return;
         }
         _currentRollover = nil;
@@ -685,35 +686,35 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
 
 #pragma mark - drawing
 
-// Drawing callback to see if coordinate system is inverted, used for bottom display
 -(BOOL)isFlipped{
  
     return !self.topEdgeAligned;    // Flip all drawing coordinates if bottom edge
 }
 
 
--(BOOL)isOpaque{
+-(BOOL)isOpaque{  // used to prevent mouse drag events beeing sent on to superview
     return YES;
 }
 
 
--(BOOL)mouseDownCanMoveWindow{
+-(BOOL)mouseDownCanMoveWindow{ // used to prevent mouse drag events beeing sent on to superview
     
     return NO;
 }
 
 
-// Main drawing - draw all allways
+
 - (void)drawRect:(NSRect)dirtyRect {
     
+    // Ignore the dirty rect and draw full control allways
+
     [super drawRect:dirtyRect];
     
     NSRect bounds = [self bounds];
-    
-    // Check if width has changed - height should be constant
+
     if (bounds.size.width != currentWidth) {
         currentWidth = bounds.size.width;
-        self.geometryIsInvalid = YES;
+        self.LayoutIsInvalid = YES;
     }
     
     if (bounds.size.height != currentHeight) {
@@ -721,12 +722,11 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
         self.tabHeight = self.maxTabHeight;  // reset the tab height - possibly
     }
     
-    // Draw background
     [self.backgroundColor set];
-    [NSBezierPath fillRect:bounds];
+    [NSBezierPath fillRect:bounds];     // Draw background
     
-    if (self.geometryIsInvalid) {  // Recalc geometry if needed
-        [self reassignTabPoistionAndTrackingArea];
+    if (self.LayoutIsInvalid) {  // Recalc layout if needed
+        [self reassignTabPositionAndTrackingArea];
     }
     
     // Draw tabs
@@ -808,7 +808,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
  * The method also aligns the editor with it's tab if the editor is visible
  */
 
--(void)reassignTabPoistionAndTrackingArea{
+-(void)reassignTabPositionAndTrackingArea{
     
     CGFloat totalRequested = self.spacerWidth;      // Start with one spacer width to the left side
     CGFloat longestRequested = MINTABWIDTH + 1.0;   // Strat value > min width, in case all tabs are shorter than min to prevent warning for insufficinet size
@@ -873,7 +873,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
         [tab setStartX:roundf(accumulatedX) width:roundf(tabWidth)];
         accumulatedX = accumulatedX + tabWidth + self.spacerWidth;
     }
-    self.geometryIsInvalid = NO;
+    self.LayoutIsInvalid = NO;
     return;
 }
 
@@ -925,7 +925,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
 
     // Postprocess - redraw as needed
     if (displayDirty) {
-        [self reassignTabPoistionAndTrackingArea];
+        [self reassignTabPositionAndTrackingArea];
     }
 }
 
@@ -959,7 +959,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     
     // Postprocess - redraw as needed
     if (displayDirty) {
-        [self reassignTabPoistionAndTrackingArea];
+        [self reassignTabPositionAndTrackingArea];
     }
 }
 
@@ -983,7 +983,6 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
             }
             
             // Set up the drag
-            dragSourceTab = self.currentRollover;
             NSString *dragString =[self dragStringForTabWithIndex:[self indexForRolloverTab]];
             
             NSDraggingItem *di = [[NSDraggingItem alloc] initWithPasteboardWriter:dragString];
@@ -991,6 +990,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
             NSRect r = NSMakeRect(stPt.x + 2, stPt.y + 2, dragImage.size.width, dragImage.size.height);
             [di setDraggingFrame:r contents:dragImage];
 
+            dragSourceTab = self.currentRollover;
             dragInProgress = YES;
             [self beginDraggingSessionWithItems:[NSArray arrayWithObject:di] event:dragStartMouseEvent source:self];
         }
@@ -1002,7 +1002,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     
     [labelEditor setString:editedTab.label];
     [self.window makeFirstResponder:self.window];
-    [self reassignTabPoistionAndTrackingArea];
+    [self reassignTabPositionAndTrackingArea];
     [self setNeedsDisplay:YES];
 }
 
@@ -1015,9 +1015,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
         return NO;
     };
     
-    
     NSTextView *tv = (NSTextView *)[self.window fieldEditor:YES forObject:nil]; // take the shared field editor and configure it
-    
     if (!tv) {  // Did not get the field editor
         return NO;
     }
@@ -1056,7 +1054,8 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     // textview editing did end
     NSTextView *tv = [notification object];
     
-    [self setLabel:[NSString stringWithString:tv.string] forTabAtIndex:[self.tabs indexOfObject:editedTab]];
+    [self setLabel:tv.string forTabAtIndex:[self.tabs indexOfObject:editedTab]];
+//    [self setLabel:[NSString stringWithString:tv.string] forTabAtIndex:[self.tabs indexOfObject:editedTab]];
     
     // Remove the field editor
     [tv removeFromSuperview];
@@ -1073,7 +1072,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     CGFloat h = tv.frame.size.height; // Reuse the old height, will not change
     NSSize siz = NSMakeSize( (w < [editedTab widthForLabelString] ? [editedTab widthForLabelString] : w) , h);  // Set a new size (width) but never less than original (otherwise text below is exposed)
     [tv setFrameSize:siz];
-    self.geometryIsInvalid = YES;
+    self.LayoutIsInvalid = YES;
     [self setNeedsDisplay:YES];
 }
 
@@ -1122,7 +1121,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
 
 /** 
  * The dragString is encoded following the following format
- * "H I LL L T, meaning"
+ * "H I LL L T", meaning
  * H - Header 15 characters followed by one space - header shall be bst.tabview.1.0 to be valid
  * I - tab index integer 4 digits, with leading zeroes as needed followed by 1 space
  * LL - Label length integer 4 digits, with leading zeroes as needed followed by 1 space
@@ -1160,6 +1159,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     return s;
 }
 
+
 -(BOOL)validateDragString:(NSString *)dragString{
     
     
@@ -1179,7 +1179,6 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     NSCharacterSet *unwantedCharacters = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
 
     // Check index
-    
     r = NSMakeRange(16, 4);
     s = [dragString substringWithRange:r];  // Extract index
     
@@ -1193,7 +1192,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     
     // Check label length
     r = NSMakeRange(21, 4);
-    s = [dragString substringWithRange:r];  // Extract index
+    s = [dragString substringWithRange:r];  // Extract label length
     
     if ([s length] != 4) {
         return NO;
@@ -1205,7 +1204,6 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     
     return YES;
 }
-
 
 
 
@@ -1315,7 +1313,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     dragSourceTab = nil;
     dragInProgress = NO;
     dragStartMouseEvent = nil;
-    self.geometryIsInvalid = YES;
+    self.LayoutIsInvalid = YES;
     [self setNeedsDisplay:YES];
 }
 
@@ -1440,7 +1438,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     NSArray *ar = [sender.draggingPasteboard readObjectsForClasses:[NSArray arrayWithObject:[NSString class]] options:nil];
 
     if (( ar.count != 1 ) || (![self validateDragString:(NSString *)[ar firstObject]])) {  // Something is wrong, there should be one and only one valid string on the pasteboard
-        validDragInDest = NO;  // unset the state variable if we are going to deny drag
+//        validDragInDest = NO;  // unset the state variable if we are going to deny drag
         [self setNeedsDisplay:YES];
         return NO;
     }
@@ -1471,7 +1469,8 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
         [self moveTabAtIndex:frm toIndex:(to > frm ? (to - 1) : to)]; 
         dragInProgress = NO; // Flag the sender (== self) that no delete is needed
         
-    } else { // Do a proper new insert and assume the sender will do a delete
+    }
+    else { // Do a proper new insert and assume the sender will do a delete
 
         NSString *ds = [[sender.draggingPasteboard readObjectsForClasses:[NSArray arrayWithObject:[NSString class]] options:nil] firstObject];
         
@@ -1480,16 +1479,14 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
         }
         
         NSString *tg = [self tagFromDragString:ds];
-        
         if (tg && success) {
             success = [self setTag:tg ForTabAtIndex:(dragInsertPoint + 1)];
         }
-        
     }
     
     // Done - unset the state managing variables
     validDragInDest = NO;
-    self.geometryIsInvalid = YES;
+    self.LayoutIsInvalid = YES;
     [self setNeedsDisplay:YES];
     
     return success;
@@ -1501,7 +1498,6 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     
     // Do nothing here
 }
-
 
 
 
@@ -1540,7 +1536,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
         }
     }
     
-    self.geometryIsInvalid = YES;
+    self.LayoutIsInvalid = YES;
     [self setNeedsDisplay:YES];
     return (newIndex);
 }
@@ -1582,7 +1578,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
         }
     }
     
-    self.geometryIsInvalid = YES;
+    self.LayoutIsInvalid = YES;
     [self setNeedsDisplay:YES];
     return YES;
 }
@@ -1639,7 +1635,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
         }
     }
     
-    self.geometryIsInvalid = YES;
+    self.LayoutIsInvalid = YES;
     [self setNeedsDisplay:YES];
 
     return toIndex;
@@ -1691,7 +1687,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
     BSTTabViewTab *tab = [self.tabs objectAtIndex:index];
 
     if ([tab.label isEqualToString:label]) {  // No change - most likely an interactive edit cancel
-        self.geometryIsInvalid = YES;
+        self.LayoutIsInvalid = YES;
         [self setNeedsDisplay:YES];
         return YES;
     }
@@ -1709,7 +1705,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
         [self.delegate tabView:self labelDidChangeForTabAtIndex:index];
     }
     
-    self.geometryIsInvalid = YES;
+    self.LayoutIsInvalid = YES;
     [self setNeedsDisplay:YES];
 
     return YES;
