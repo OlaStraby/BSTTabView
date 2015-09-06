@@ -21,3 +21,7 @@ extensive delegate protocol for interaction with its controller.
 
 The tab view control does not implement undo, but this can be achieved by 
 the owning controller using the delegate protocol. 
+
+The control is a NSView subclass and is designed to be very easy to integrate. 
+It is contained in a single .h/.m pair BSTTabView.h/.m The rest of the repository
+contains a crude demo app.
