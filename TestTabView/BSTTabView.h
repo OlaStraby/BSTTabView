@@ -8,17 +8,18 @@
 
 #import <Cocoa/Cocoa.h>
 
-
+@class BSTTabView;
 
 /**
  * The delegate protocol for the BSTTabView custom control. The delegate pattern is the main
  * mechanism for feedback from the control. The control do not support binding or notifications
  * but KVO should work (not extensively tested)
  *
- * There are no checks with delegate ethoids before insert or delete actions. This is because these
- * are always initiated by direct calls from the controller of the BSTTabView with the exception of
- * drags between controlds (where allowed). In thse instances there are delegate methods that will allow
- * the controller to prevent the drag and react to the new tab inserted. 
+ * There are no checks with delegate methoids before insert or delete actions. This is intentional because these
+ * actions are always initiated by direct calls from the controller of the BSTTabView. The BSTTabView cannot
+ * generate or delete tabs throough direct user interaction with the exception of dragging between
+ * controls (when allowed). For that case there are delegate methods related to drafgging that will allow
+ * the controller to control the drag and react to / deny the new tab being inserted.
  */
 
 @protocol BSTTabViewDelegate <NSObject>
@@ -31,7 +32,7 @@
  *
  * @return YES if delegte accepts the change and NO if the change should be prevented
  */
--(BOOL)tabWithIndexWillBecomeSelected:(NSInteger)index;
+-(BOOL)tabView:(BSTTabView *)tabView tabWithIndexShouldBecomeSelected:(NSInteger)index;
 
 
 /**
@@ -39,7 +40,7 @@
  *
  * @param index The index of the tab that became selected, -1 if no tab will be selected
  */
--(void)tabWithIndexDidBecomeSelected:(NSInteger)index;
+-(void)tabView:(BSTTabView *)tabView tabWithIndexDidBecomeSelected:(NSInteger)index;
 
 
 /**
@@ -51,7 +52,7 @@
  *
  * @param index The new index of the selected tab
  */
--(void)selectedTabChangedIndexTo:(NSInteger)index;
+-(void)tabView:(BSTTabView *)tabView selectedTabChangedIndexTo:(NSInteger)index;
 
 
 /**
@@ -62,7 +63,7 @@
  *
  * @return YES if delegte accepts the change and NO if the change should be prevented
  */
--(BOOL)labelWillChangeTo:(NSString *)newLabel forTabAtIndex:(NSUInteger)index;
+-(BOOL)tabView:(BSTTabView *)tabView labelShouldChangeTo:(NSString *)newLabel forTabAtIndex:(NSUInteger)index;
 
 
 /**
@@ -71,16 +72,16 @@
  * @param index The index of the tab that changed
  *
  */
--(void)labelDidChangeForTabAtIndex:(NSUInteger)index;
+-(void)tabView:(BSTTabView *)tabView labelDidChangeForTabAtIndex:(NSUInteger)index;
 
 
 /**
- * Method that is called if there is insufficient space to display even compressed versionsm of the tabs
- * The BSTTabVie control has no further mechanism to deal with this beyond displaying as many tabs as possible
+ * Method that is called if there is insufficient space to display even compressed versions of the tabs
+ * The BSTTabView control has no further mechanism to deal with this beyond displaying as many tabs as possible
  * and then truncating. There is no guarantee the selected tab vill be visible
  *
  */
--(void)spaceIsInsufficientToDisplayAllTabs;
+-(void)insufficientWidthForTabView:(BSTTabView *)tabView ;
  
 
 
@@ -92,7 +93,7 @@
  *
  * @return YES if delegte accepts the change and NO if the change should be prevented
  */
--(BOOL)editingWillBeginForTabAtIndex:(NSUInteger)index;
+-(BOOL)tabView:(BSTTabView *)tabView editingShouldBeginForTabAtIndex:(NSUInteger)index;
 
 
 /**
@@ -106,7 +107,7 @@
  *
  * @return YES if delegte accepts the drag and NO if the drag should be prevented
  */
--(BOOL)draggingWillBeginForTabWithIndex:(NSUInteger)index;
+-(BOOL)tabView:(BSTTabView *)tabView draggingShouldBeginForTabWithIndex:(NSUInteger)index;
 
 
 /**
@@ -117,7 +118,7 @@
  * @param success YES if the drag was successful and NO if it was reveresed
  *
  */
--(void)draggingFinishedForTabWithLabel:(NSString *)label tag:(NSString *)tag success:(BOOL)success;
+-(void)tabView:(BSTTabView *)tabView draggingDidFinishForTabWithLabel:(NSString *)label tag:(NSString *)tag success:(BOOL)success;
 
 
 
@@ -132,23 +133,24 @@
  *
  * @return YES if delegte accepts the drag and NO if the drag should be prevented
  */
--(BOOL)draggedTabWillBeInsertedAtIndex:(NSUInteger)index withLabel:(NSString *)label tag:(NSString *)tag sourceExternal:(BOOL)external;
-
-
+-(BOOL)tabView:(BSTTabView *)tabView draggedTabWillBeInsertedWithIndex:(NSUInteger)index label:(NSString *)label tag:(NSString *)tag sourceExternal:(BOOL)external;
 
 @end
 
 
 
 
-
-
+/**
+ * enum defining permitted drag operations
+ * Both source and destination controls need to agree, most restrictive 
+ * rule prevails.
+ */
 
 typedef NS_ENUM(NSInteger, BSTTabViewDragOptions) {
-    BSTTabViewDragNone,
-    BSTTabViewDragInternal,
-    BSTTabViewDragLocal,
-    BSTTabViewDragGlobal
+    BSTTabViewDragNone,                                // No dragging allowed - default
+    BSTTabViewDragInternal,                            // Allow dragging within control
+    BSTTabViewDragLocal,                               // Allow dragging between BSTTabView controls in same application
+    BSTTabViewDragGlobal                               // Allows dragging of tabs between applications
 };
 
 /**
@@ -173,28 +175,28 @@ typedef NS_ENUM(NSInteger, BSTTabViewDragOptions) {
 /**
  * property selectedTab that reflect the index of the currently selected tab
  */
-@property (readwrite, nonatomic) NSInteger selectedTab;
+@property (nonatomic) NSInteger selectedTab;
 
 
 /**
  * The target property defines the control's target for action message
  */
-@property (readwrite, nonatomic, weak)id target;
+@property (nonatomic, weak)id target;
 
 
 /**
  * The action property defines the control's action message, which is sent to the target
  * upon receipt of this action it is possible to query which tab was clicked by polling for the
  * selected tab or for current rollover, the latter enables detection of a click outside
- * the tabs in teh control area and is the recommended way
+ * the tabs in the control area and is the recommended way
  */
-@property (readwrite, nonatomic)SEL action;
+@property (nonatomic)SEL action;
 
 
 /**
  * property lastClickedTab that reflect the index of the last clicked tab or -1 if last click in control was outside any tab
  * This property can be polled after the reception of the target-action message
- * The value of this property is undefined at any other time than directly after a target -action
+ * @warning The value of this property is undefined at any other time than directly after a target-action
  * message call.
  */
 @property (readonly, nonatomic) NSInteger lastClickedTab;
@@ -203,7 +205,7 @@ typedef NS_ENUM(NSInteger, BSTTabViewDragOptions) {
 /**
  * property clickCount that reflect the nymber of quick repetitive clicks last detected. 
  * This property can be polled after the reception of the target-action message
- * The value of this property is undefined at any other time than directly after a target -action
+ * @warning The value of this property is undefined at any other time than directly after a target-action
  * message call.
  */
 @property (readonly, nonatomic) NSInteger clickCount;
@@ -212,27 +214,27 @@ typedef NS_ENUM(NSInteger, BSTTabViewDragOptions) {
 /**
  * property delegate allows setting and object to receive the callback functions in the BSTTabViewDelegate protocol.
  */
-@property (readwrite, nonatomic, weak) id<BSTTabViewDelegate> delegate;
+@property (nonatomic, weak) id<BSTTabViewDelegate> delegate;
 
 
 /**
- * property topEdge is a boolean that defines if the tabs are oriented for a bottom fit or a top fit. YES for top edge and NO for bottom edge
+ * property topEdgeAligned is a boolean that defines if the tabs are oriented for a bottom fit or a top fit. YES for top edge and NO for bottom edge
  * default to YES
  */
 
-@property (readwrite, nonatomic) BOOL topEdge;
+@property (nonatomic) BOOL topEdgeAligned;
 
 /**
  * property rolloverEnabled is a boolean that defines if the visual Rollover feature is enabled, default to YES
  */
 
-@property (readwrite, nonatomic) BOOL rolloverEnabled;
+@property (nonatomic) BOOL rolloverEnabled;
 
 /**
  * property doubleClickEditEnabled is a boolean that defines if the double click to edit label feature is enabled, default to NO
  */
 
-@property (readwrite, nonatomic) BOOL doubleClickEditEnabled;
+@property (nonatomic) BOOL doubleClickEditEnabled;
 
 /**
  * property userTabDraggingEnabled is a boolean that defines if drag and drop to rearrange tabs is allowed, default to 0
@@ -243,8 +245,7 @@ typedef NS_ENUM(NSInteger, BSTTabViewDragOptions) {
  * BSTTabViewDragLocal - User dragging within same application allowed
  * BSTTabViewDragGlobal - User dragging allowed also between apps
  */
-
-@property (readwrite, nonatomic) BSTTabViewDragOptions userTabDraggingEnabled;
+@property (nonatomic) BSTTabViewDragOptions userTabDraggingEnabled;
 
 
 
@@ -252,75 +253,74 @@ typedef NS_ENUM(NSInteger, BSTTabViewDragOptions) {
  * The spacerWidth property defines the distance between each tab in the band. The spacer is filled by a sloping
  * edges of the tabs partially overlapping. Defaults to 5.0 on initialisation if not set explictly.
  */
-@property (readwrite, nonatomic) CGFloat spacerWidth;
+@property (nonatomic) CGFloat spacerWidth;
 
 /**
  * The maxTabHeight property defines the max height of each tab in the band. Deafult is control height - 5.0. When space is 
  * insufficuent tabs become control height
  */
-@property (readwrite, nonatomic) CGFloat maxTabHeight;
+@property (nonatomic) CGFloat maxTabHeight;
 
 /**
  * The tabCornerRadius property defines the corner rounding of each tab in the band. 0.0 creates sharp corners.
  * max is spacerWidth, bigger numbers are treated as spacerWidth. Deafult is 1.0
  */
-@property (readwrite, nonatomic) CGFloat tabCornerRadius;
-
+@property (nonatomic) CGFloat tabCornerRadius;
 
 
 /**
  * The backgroundColor property defines the background color of the tab ribbon and the non-selected tabs, default is windowFrameColor
  */
-@property (readwrite, nonatomic, strong)NSColor *backgroundColor;
+@property (nonatomic)NSColor *backgroundColor;
 
 /**
  * The BorderColor color property defines the edge outline color of the selected tab, default is gridColor
  */
-@property (readwrite, nonatomic, strong)NSColor *borderColor;
+@property (nonatomic)NSColor *borderColor;
 
 /**
  * The TextColor color property defines the text color of the selected tab, default is gridColor
  */
-@property (readwrite, nonatomic, strong)NSColor *textColor;
+@property (nonatomic)NSColor *textColor;
 
 
 
 /**
  * The selectedFieldColor color property defines the background color of the selected tab, default is highlightColor
  */
-@property (readwrite, nonatomic, strong)NSColor *selectedFieldColor;
+@property (nonatomic)NSColor *selectedFieldColor;
 
 /**
  * The selectedBorderColor color property defines the edge outline color of the selected tab, default is highlightColor
  */
-@property (readwrite, nonatomic, strong)NSColor *selectedBorderColor;
+@property (nonatomic)NSColor *selectedBorderColor;
 
 /**
  * The selectedTextColor color property defines the text color of the selected tab, default is controlShadowColor
  */
-@property (readwrite, nonatomic, strong)NSColor *selectedTextColor;
+@property (nonatomic)NSColor *selectedTextColor;
 
 
 /**
  * The rolloverFieldColor color property defines the background color of the rollover tab, default is controlHighlightColor
  */
-@property (readwrite, nonatomic, strong)NSColor *rolloverFieldColor;
+@property (nonatomic)NSColor *rolloverFieldColor;
 
 /**
  * The rolloverBorderColor color property defines the edge outline color of the rollover tab, default is controlHighlightColor
  */
-@property (readwrite, nonatomic, strong)NSColor *rolloverBorderColor;
+@property (nonatomic)NSColor *rolloverBorderColor;
 
 /**
  * The rolloverTextColor color property defines the text color of the rollover tab, default is controlShadowColor
  */
-@property (readwrite, nonatomic, strong)NSColor *rolloverTextColor;
+@property (nonatomic)NSColor *rolloverTextColor;
 
 
 /**
  * The editingColor color property defines the color of interactive text edits and drag insert marks, default is black
  */
-@property (readwrite, nonatomic, strong)NSColor *editingColor;
+@property (nonatomic)NSColor *editingColor;
 
 
 

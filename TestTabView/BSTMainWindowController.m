@@ -59,19 +59,22 @@ NSString const *BSTTabIdKey = @"BSTTABIDKEY";
     self.tc1.tabView.spacerWidth = 10;
     self.tc1.tabView.tabCornerRadius = 3;
     self.tc1.tabView.userTabDraggingEnabled = BSTTabViewDragLocal;
-    self.tc1.tabView.editingColor = [NSColor redColor];
-    self.tc1.tabView.selectedFieldColor = [NSColor yellowColor];
-    self.tc1.tabView.selectedBorderColor = [NSColor yellowColor];
+//    self.tc1.tabView.editingColor = [NSColor redColor];
     
     self.tc2.tag = @"Lower TC";
-    self.tc2.tabView.topEdge = NO;
-    self.tc2.tabView.maxTabHeight = 20;
+    self.tc2.tabView.topEdgeAligned = NO;
+    self.tc2.tabView.maxTabHeight = 25;
     self.tc2.tabView.rolloverEnabled = NO;
-    self.tc2.tabView.spacerWidth = 10;
-    self.tc2.tabView.tabCornerRadius = 3;
+    self.tc2.tabView.spacerWidth = 2;
+    self.tc2.tabView.tabCornerRadius = 2;
     self.tc2.tabView.userTabDraggingEnabled = BSTTabViewDragLocal;
     self.tc2.tabView.selectedFieldColor = [NSColor whiteColor];
     self.tc2.tabView.selectedBorderColor = [NSColor whiteColor];
+    self.tc2.tabView.selectedTextColor = [NSColor darkGrayColor];
+    self.tc2.tabView.backgroundColor = [NSColor blueColor];
+    self.tc2.tabView.borderColor= [NSColor whiteColor];
+    self.tc2.tabView.textColor = [NSColor whiteColor];
+
     self.tc2.tabView.editingColor = [NSColor blueColor];
 }
 

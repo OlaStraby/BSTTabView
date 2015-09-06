@@ -6,115 +6,114 @@
 //  Copyright (c) 2015 OlaStraby. All rights reserved.
 //
 
-#import "BSTTabView.h"
-@class BSTTabViewTab;
+#import          "BSTTabView.h"
+
+@class           BSTTabViewTab;
+
+NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";
+
+#define          MINTABWIDTH           15.0
+#define          STDYOFFSET             2.0
 
 
-
-NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
-
-#define MINTABWIDTH 15.0
-#define STDYOFFSET 2.0
 
 @interface BSTTabView ()<NSTextViewDelegate,NSDraggingSource,NSDraggingDestination> {
     
     
-@private // private iVars
+@private
     
-    NSMutableParagraphStyle *style;  // fixed text style
+    NSMutableParagraphStyle*             style;                    // fixed text style
     
-    CGFloat currentWidth;   // The overall view width last used when rendering it
-    CGFloat currentHeight; // The overall view height last used when rendering it
-    
-    NSTextView *labelEditor;  // Reference to the label editor when in use
-    BSTTabViewTab *editedTab;  // reference to the tab beeing edited
-    
-    NSImage *dragImage;  // Constant image for drag pointer
+    CGFloat                              currentWidth;             // The overall view width last used when rendering it
+    CGFloat                              currentHeight;            // The overall view height last used when rendering it
+    NSTextView*                          labelEditor;              // Reference to the label editor when in use
+    BSTTabViewTab*                       editedTab;                // reference to the tab beeing edited
+    NSImage*                             dragImage;                // Constant image for drag pointer
     
     // State managing variables for drag source
-    NSEvent *dragStartMouseEvent;  // The strat mouse event
-    BOOL dragInProgress;  // flag from source if drag is in progress - set to NO by destination if drag is short circuited
-    BSTTabViewTab *dragSourceTab; // The tab beeing dragged;
+    NSEvent*                             dragStartMouseEvent;      // The start mouse event
+    BOOL                                 dragInProgress;           // flag in source if drag is in progress - see notes in drag methods about use
+    BSTTabViewTab*                       dragSourceTab;            // The tab in source beeing dragged, nil if no drag in progress
     
     // State managing variables for drag destination
-    BOOL validDragInDest; // flag in destination if a valid drag is in scope
-    NSDragOperation destinationDragOperation; // Current allowed drag insert op
-    NSInteger dragInsertPoint;  // Position of visal cue for drag insert (after this tab or first if -1)
+    BOOL                                 validDragInDest;          // flag in destination, YES if a valid drag is inside control
+    NSDragOperation                      destinationDragOperation; // Current allowed drag insert operation, determined on entry and maintained while drag is inside control
+    NSInteger                            dragInsertPoint;          // Position of visal cue for drag insert (after tab with number dragInsertPoint or before first if -1, any other value means invalid/no insert point)
 }
 
 // private properties used by the helper class BSTTabViewTab
-@property (strong,readwrite,nonatomic) NSDictionary *defaultTextOptions;
-@property (strong,readwrite,nonatomic) NSDictionary *selectedTextOptions;
-@property (strong,readwrite,nonatomic) NSDictionary *rolloverTextOptions;
-@property (readwrite, nonatomic) CGFloat preferredTextHeight;
-@property (readonly, nonatomic, strong) NSFont *textFont;
-@property (readwrite, nonatomic) CGFloat tabHeight;
+@property (nonatomic) NSDictionary *defaultTextOptions;
+@property (nonatomic) NSDictionary *selectedTextOptions;
+@property (nonatomic) NSDictionary *rolloverTextOptions;
+@property (nonatomic) CGFloat preferredTextHeight;
+@property (readonly, nonatomic) NSFont *textFont;
+@property (nonatomic) CGFloat tabHeight;
 
 // State tracking properties
-@property (nonatomic, readwrite, weak) BSTTabViewTab *currentRollover;
-@property (nonatomic, readwrite) BOOL geometryIsInvalid; // Flag to recalculate widths
+@property (nonatomic, weak) BSTTabViewTab *currentRollover;                     // Reference to currently hovered over tab
+@property (nonatomic) BOOL geometryIsInvalid;                                   // Flag to require recalculation of widths on next redraw
 
 // The array of tabs
-@property (strong,readwrite,nonatomic) NSMutableArray *tabs; // The array of tabs
+@property (nonatomic) NSMutableArray *tabs;                                     // The array of tabs
 
 
 // Private methods used internally
-// ===============================
--(NSInteger)moveTabAtIndex:(NSUInteger)fromIndex toIndex: (NSUInteger)toIndex;  // Move a tab
+-(NSInteger)moveTabAtIndex:(NSUInteger)fromIndex toIndex: (NSUInteger)toIndex;  // Move a tab - could be consdered to be made public
+-(void)reassignTabPoistionAndTrackingArea;                                      // Reallocate width, start coordinates and tracking areas for all tabs
+-(CGFloat)widthForLabelOrEditorForTab:(BSTTabViewTab *)tab;                     // The preferred width that is suffient for both label and field editor
+-(BOOL)beginEditLabelInteractiveForTab:(NSInteger)index;                        // Edit the label interactively using the window field editor
 
--(void)setAllTabWidthsAndStartPos;  // Reallocate space and strat coordinates for tabs
-
--(CGFloat)widthForLabelOrEditorForTab:(BSTTabViewTab *)tab; // The preferred width that is suffient for both label and field editor
-
--(BOOL)beginEditLabelInteractiveForTab:(NSInteger)index;  // Edit the label interactively using the window field editor
-
--(NSImage *)createDragImage;  // Method to generate a suitable image for dragging
--(NSString *)dragStringForTabWithIndex:(NSInteger)index; // Create the string for pasteboard placement used in dragging
--(BOOL)validateDragString:(NSString *)dragString; // Validate dragString is a valid drag string
--(NSInteger)indexFromDragString:(NSString *)dragString; // Extract the encoded index from a  drag string
--(NSString*)labelFromDragString:(NSString *)dragString; // Extract the encoded label from a drag string
--(NSString*)tagFromDragString:(NSString *)dragString; // extract the encoded index from a drag string
-
+-(NSImage *)createDragImage;                                                    // Method to generate a suitable image for dragging
+-(NSString *)dragStringForTabWithIndex:(NSInteger)index;                        // Create the string for pasteboard placement used in dragging
+-(BOOL)validateDragString:(NSString *)dragString;                               // Validate dragString is a valid drag string
+-(NSInteger)indexFromDragString:(NSString *)dragString;                         // Extract the encoded index from a  drag string
+-(NSString*)labelFromDragString:(NSString *)dragString;                         // Extract the encoded label from a drag string
+-(NSString*)tagFromDragString:(NSString *)dragString;                           // extract the encoded tag from a drag string
 
 @end
 
+
+
 #pragma mark - <<<<<<<<<< HELPER CLASS  >>>>>>>>>>>>>>
-@interface BSTTabViewTab : NSObject
-{  // private ivars
+
+/**
+ * The BSTTabViewTab helper class is a fully internal helper class for the BSTTabView control. It is a lightweight 
+ * data carrier and worker class declared inside the BSTTabView class. It is unsafe to use in any other way than 
+ * as as a purelyinternal hlper. It should not be subclassed or called directly.
+ *
+ * It is declared this way to allow the entire control to be manged by a single .h + .m fire combination for a lightweight experience
+ */
+@interface BSTTabViewTab : NSObject {
+    
 @private
-    NSBezierPath *boundaryCurve;   // The precalualeted boundary shape of the tab
-    NSTrackingArea *trackingArea;  // The current tracking area
-    BOOL rollover;                 // is rolled over flag
-    CGFloat currentTabHt;          // The height the tab is currently drawn to
+    NSBezierPath *boundaryCurve;                                 // The precalualeted boundary shape of the tab
+    NSTrackingArea *trackingArea;                                // The currently assigned tracking area
+    BOOL rollover;                                               // flag indicating if the assigned tracvking area is currently rolled over (contains the mouse cursor)
+    CGFloat currentTabHt;                                        // The height the tab is currently drawn to
 }
 
-// Properties
-// ==========
 // Referencing properties
-@property (weak, nonatomic, readwrite) BSTTabView *owner;  // The referencing tabView
+@property (weak, nonatomic, readwrite) BSTTabView *owner;        // The referencing tabView
 
 // Data properties
-@property (strong, nonatomic, readwrite) NSString *tag;  // The attached tag
-@property (strong,nonatomic,readwrite) NSString *label; // The text label
+@property (copy, nonatomic) NSString *tag;                       // The attached tag
+@property (copy,nonatomic) NSString *label;                      // The text label
 
 // Graphical properties
-@property (readwrite, nonatomic) CGFloat coreWidth; // The allocated width of the core part of the tab (between spacers)
-@property (readwrite, nonatomic) CGFloat startX;  // Start point of core area
+@property (readonly, nonatomic) CGFloat coreWidth;             // The allocated width of the core part of the tab (between spacers)
+@property (readonly, nonatomic) CGFloat startX;                // Start point of core area
 
+// Methods used internally
+-(id)initWithOwner:(BSTTabView *)owner;                         // Initialiser
 
+-(CGFloat)widthForLabelString;                                  // The preferred width for the current label string rendered in the current text style
 
-// Methods
-// ========
-
--(id)initWithOwner:(BSTTabView *)owner;  // Initialiser
-
-// Desired width returning methods
--(CGFloat)widthForLabelString;  // The preferred width for the current label string rendered in teh current font
+-(void)setStartX:(CGFloat)startX width:(CGFloat)width;          // Method to set the geometric shape of the tab and recalulate the curve if needed
 
 // Drawing methods
--(void)drawSelf:(BOOL)selected;  // Draw self - as selected if paramerter is YES
--(void)recreateBoundaryCurve; // Recalualte the bezier path
--(BOOL)xLocIsBeforeFirstHalfOfTab:(CGFloat)xLoc; // Returns YES if the passed in location is before halfway (including all preceeding tabs) of this tab and NO if not
+-(void)drawSelf:(BOOL)selected;                                 // Draw self - as selected if paramerter is YES
+-(void)recreateBoundaryCurve;                                   // Recalualte the bezier path
+-(BOOL)xLocIsBeforeFirstHalfOfTab:(CGFloat)xLoc;                // Returns YES if the passed in location is before halfway (including all preceeding tabs) of this tab and NO if not - used for drag insert
 
 @end
 
@@ -138,8 +137,8 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
 -(void)dealloc {
     
     if (trackingArea) {
-        [self.owner removeTrackingArea:trackingArea];  // Remove the previous tracking area
-        rollover = NO;  // Remove rollover if TA changed
+        [self.owner removeTrackingArea:trackingArea];
+        rollover = NO;
         trackingArea = nil;
     }
     // release iVars
@@ -149,39 +148,10 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
 #pragma mark - custom accessors
 
 
--(void)setCoreWidth:(CGFloat)coreWidth {  // Custom as need to recreate bezier on change
-    
-    if ((coreWidth == _coreWidth) && (currentTabHt == self.owner.tabHeight)) {  // No change = no action
-        return;
-    }
-    
-    _coreWidth = coreWidth;  // New width - need to recreate the bezier
-    [self recreateBoundaryCurve];
-}
-
-
-
--(void)setStartX:(CGFloat)startX {  // Custom as need to recreate bezier on change
-    
-    if (startX == _startX) {
-        return;
-    }
-    
-    _startX = startX;
-    
-    /*
-     * The below is a trick to enforce regen of the curve on the call to setCoreWidth even if the core width is unchanged,
-     * which is called after setStartX by the space allocation procedure. Change in tab height will be validated by
-     * the setCoreWidth: method. Thus two passes through the curve generation method is avoided.
-     */
-    currentTabHt = -1;
-}
-
-
 
 #pragma mark - methods
 
-// The preferred width for the current label string rendered in the current font
+/// The width for the current label string rendered in the current font
 -(CGFloat)widthForLabelString{
     
     CGFloat w = 0.0;
@@ -190,12 +160,26 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
         w = size.width + 2.0;
     }
     
-    return (w < MINTABWIDTH ? MINTABWIDTH : w);
+    return (w < MINTABWIDTH ? MINTABWIDTH : w); // never less than min
 }
 
 
 
-// Recreate the boundary path and also sets the tracking area
+-(void)setStartX:(CGFloat)startX width:(CGFloat)coreWidth {
+    
+    if ((coreWidth == _coreWidth) && (startX == _startX) && (currentTabHt == self.owner.tabHeight)) {
+        return;
+    }
+    
+    _coreWidth = coreWidth;
+    _startX = startX;
+    [self recreateBoundaryCurve];
+}
+
+
+
+
+/// Recreate the boundary path and set the tracking area
 -(void)recreateBoundaryCurve {
     
     NSBezierPath *path = [[NSBezierPath alloc] init];
@@ -220,7 +204,6 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
     cp1.y = 0.0 + currentTabHt;
     [path curveToPoint:pt controlPoint1:cp1 controlPoint2:cp1];
     
-    
     pt.x = self.startX + self.coreWidth - self.owner.tabCornerRadius;
     pt.y = 0.0 + currentTabHt;
     [path lineToPoint:pt];
@@ -231,7 +214,6 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
     cp1.y = 0.0 + currentTabHt;
     [path curveToPoint:pt controlPoint1:cp1 controlPoint2:cp1];
     
-    
     pt.x = self.startX + self.coreWidth + self.owner.spacerWidth;
     pt.y = 0.0;
     [path lineToPoint:pt];
@@ -239,10 +221,10 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
     boundaryCurve = path;
     
     
-    // Set the tracking area
+   /* Set the tracking area */
     if (trackingArea) {
-        [self.owner removeTrackingArea:trackingArea];  // Remove the previous tracking area
-        rollover = NO;  // Remove rollover if TA changed
+        [self.owner removeTrackingArea:trackingArea];
+        rollover = NO; // Remove rollover if TA changed
     }
     NSRect rect = NSMakeRect(self.startX, 0.0, self.coreWidth, currentTabHt);
     trackingArea = [[NSTrackingArea alloc] initWithRect:rect options:(NSTrackingMouseEnteredAndExited | NSTrackingActiveInActiveApp)  owner:self userInfo:nil];
@@ -261,12 +243,14 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
         borderColor = self.owner.selectedBorderColor;
         txtAttr = self.owner.selectedTextOptions;
         
-    } else if (rollover && self.owner.rolloverEnabled)  {  // Rollover enabled, rollover actually always active just not shown by color change
+    }
+    else if (rollover && self.owner.rolloverEnabled)  {  // Rollover enabled, rollover actually always active just not shown by color change
         fillColor = self.owner.rolloverFieldColor;
         borderColor = self.owner.rolloverBorderColor;
         txtAttr = self.owner.rolloverTextOptions;
         
-    } else {
+    }
+    else {
         fillColor = self.owner.backgroundColor;
         borderColor = self.owner.borderColor;
         txtAttr = self.owner.defaultTextOptions;
@@ -275,7 +259,7 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
     [fillColor set];
     [boundaryCurve fill];
     
-    // Make a rect for text, height as required fro font if possible but never more than height of tab - 4 (2 top + 2 bottom margin)
+    // Make a rect for text, height as required for font if possible but never more than height of tab - 4 (2 top + 2 bottom margin)
     NSRect textRect = NSMakeRect(self.startX + 1.0, STDYOFFSET, self.coreWidth -1.0, ((currentTabHt < (self.owner.preferredTextHeight-4)) ? (currentTabHt-4) : self.owner.preferredTextHeight));
     [self.label drawInRect:textRect withAttributes:txtAttr];
     
@@ -283,6 +267,11 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
     [boundaryCurve stroke];
 }
 
+/*
+ * This method is used by the dragging system to determine the current insert point.
+ * It returns YES if the passed in xLoc is in front of the halfpoint of this tab.
+ * half point is chosen because any point aft of teh half point goes behind this tab.
+ */
 -(BOOL)xLocIsBeforeFirstHalfOfTab:(CGFloat)xLoc{
     
     
@@ -294,9 +283,8 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
 }
 
 
-#pragma mark - Mouse Tracking methods
+#pragma mark - Mouse Tracking methods (rollover)
 
-// Called in tracking area
 -(void)mouseEntered:(NSEvent *)theEvent {
     
     rollover = YES;
@@ -306,9 +294,9 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
 
 
 -(void)mouseExited:(NSEvent *)theEvent {
-    
+// unset if this is the currently set rollover, else ignore (somthing jumped)
     rollover = NO;
-    if (self.owner.currentRollover == self) {  // unset if this is the currently set rollover
+    if (self.owner.currentRollover == self) {
         self.owner.currentRollover = nil;
     }
 }
@@ -357,7 +345,7 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
     
     _delegate =nil;
     
-    _topEdge = YES;
+    _topEdgeAligned = YES;
     _rolloverEnabled = YES;
     _doubleClickEditEnabled = NO;
     _userTabDraggingEnabled = BSTTabViewDragNone;
@@ -422,14 +410,14 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
 
 
 
--(void)setTopEdge:(BOOL)topEdge {
+-(void)setTopEdgeAligned:(BOOL)topEdgeAligned {
 
     
-    if (topEdge == _topEdge) {
+    if (topEdgeAligned == _topEdgeAligned) {
         return;  // No change
     }
     
-    _topEdge = topEdge;
+    _topEdgeAligned = topEdgeAligned;
 
     [self setNeedsDisplay:YES];
 }
@@ -654,8 +642,8 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
         return;  // Abort on illegal input
     }
 
-    if (self.delegate && [self.delegate respondsToSelector:@selector(tabWithIndexWillBecomeSelected:)]) {
-        if (![self.delegate tabWithIndexWillBecomeSelected:selectedTab]) {
+    if (self.delegate && [self.delegate respondsToSelector:@selector(tabView:tabWithIndexShouldBecomeSelected:)]) {
+        if (![self.delegate tabView:self tabWithIndexShouldBecomeSelected:selectedTab]) {
             return;  // Abort if delegate denies change
         }
     }
@@ -667,8 +655,8 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
     _selectedTab = selectedTab;
     [self setNeedsDisplay:YES];
     
-    if (self.delegate && [self.delegate respondsToSelector:@selector(tabWithIndexDidBecomeSelected:)]) {
-        [self.delegate tabWithIndexDidBecomeSelected:selectedTab];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(tabView:tabWithIndexDidBecomeSelected:)]) {
+        [self.delegate tabView:self tabWithIndexDidBecomeSelected:selectedTab];
     }
 }
 
@@ -700,7 +688,7 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
 // Drawing callback to see if coordinate system is inverted, used for bottom display
 -(BOOL)isFlipped{
  
-    return !self.topEdge;    // Flip all drawing coordinates if bottom edge
+    return !self.topEdgeAligned;    // Flip all drawing coordinates if bottom edge
 }
 
 
@@ -738,7 +726,7 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
     [NSBezierPath fillRect:bounds];
     
     if (self.geometryIsInvalid) {  // Recalc geometry if needed
-        [self setAllTabWidthsAndStartPos];
+        [self reassignTabPoistionAndTrackingArea];
     }
     
     // Draw tabs
@@ -807,14 +795,24 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
 
 
 
+/* 
+ * This method allocates location and widths to tabs and sets the tracking areas
+ * It works in this way
+ * Step 1 it tries to give all tabs all the sapece they want
+ * Step 2 if that does not work because the tab row space is to small 
+ * it gradually decreases the length of longer tabs except the current tab
+ * until space is sufficient or the min tab width is rached
+ * If min width is reached it renders as many tabs as it can in that space and sends a delegate
+ * message that space is insufficient.
+ * Step 3 it actually assigns the allocated poitions and tracking areas to each tab
+ * The method also aligns the editor with it's tab if the editor is visible
+ */
 
-// Method to (re)allocate widths to tabs
-
--(void)setAllTabWidthsAndStartPos{
+-(void)reassignTabPoistionAndTrackingArea{
     
-    CGFloat totalRequested = self.spacerWidth;  // Start with one spacer with to the left side
-    CGFloat longestRequested = MINTABWIDTH + 1.0; // In case all tabs are shorter than min to prevent warning for insufficinet size
-    CGFloat tabWidth;  // intermediate value
+    CGFloat totalRequested = self.spacerWidth;      // Start with one spacer width to the left side
+    CGFloat longestRequested = MINTABWIDTH + 1.0;   // Strat value > min width, in case all tabs are shorter than min to prevent warning for insufficinet size
+    CGFloat tabWidth;
     CGFloat w;
     BSTTabViewTab *tab;
     
@@ -823,47 +821,47 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
         tab = [self.tabs objectAtIndex:i];
         tabWidth = [self widthForLabelOrEditorForTab:tab];
         
-        if (tabWidth > longestRequested) {  // Track the longest individual one
+        if (tabWidth > longestRequested) {
             longestRequested = tabWidth;
         }
-        totalRequested = totalRequested + tabWidth + self.spacerWidth;  // and the accumulated sum
+        totalRequested = totalRequested + tabWidth + self.spacerWidth;
     }
     
     // Compress space if required (until it fits or all tabs are smaller or equal to min)
     while ((totalRequested > currentWidth) && (longestRequested > MINTABWIDTH)) {
         
-        longestRequested = longestRequested - 1.0;  // Reduce longest allowed by 5 and recalc
-        totalRequested = self.spacerWidth;  // restart with one spacer with to the left side
+        longestRequested = longestRequested - 1.0;
+        totalRequested = self.spacerWidth;
         
         for (NSUInteger i = 0; i < self.tabs.count; i++) {
             tab = [self.tabs objectAtIndex:i];
-            if ((self.selectedTab >= 0) && (self.selectedTab == i) ) {  // The seletced tab
-                tabWidth = [self widthForLabelOrEditorForTab:tab];  // it gets its full width
-            } else {
+            if ((self.selectedTab >= 0) && (self.selectedTab == i) ) {
+                tabWidth = [self widthForLabelOrEditorForTab:tab];  // The seletced tab gets its full width
+            }
+            else {
                 w = [self widthForLabelOrEditorForTab:tab];
                 tabWidth = (w > longestRequested ? longestRequested : w);
             }
             totalRequested = totalRequested + tabWidth + self.spacerWidth;
         } // end for
-    }  // end while longestRequested has been compressed
+    }  // end while - max allowed longestRequested has now been calculated
     
     if (longestRequested <= MINTABWIDTH) {  // Not all will fit even with compression display will be truncated - notify delegate
-       if (self.delegate && [self.delegate respondsToSelector:@selector(spaceIsInsufficientToDisplayAllTabs)]) {
-            [self.delegate spaceIsInsufficientToDisplayAllTabs];
+       if (self.delegate && [self.delegate respondsToSelector:@selector(insufficientWidthForTabView:)]) {
+            [self.delegate insufficientWidthForTabView:self];
         }
 
     }
     
     // allocate actual width to tabs - all get their requested but not more than longestRequested
-    // Set startpoint and width
     CGFloat accumulatedX = self.spacerWidth;
     
     for (NSUInteger i = 0; i < self.tabs.count; i++) {
         tab = [self.tabs objectAtIndex:i];
-        tab.startX = accumulatedX;
-        if ((self.selectedTab >= 0) && (self.selectedTab == i) ) {  // The seletced tab
-            tabWidth = [self widthForLabelOrEditorForTab:tab];  // it gets its full width
-        } else {
+        if ((self.selectedTab >= 0) && (self.selectedTab == i) ) {
+            tabWidth = [self widthForLabelOrEditorForTab:tab];  // The seletced tab gets its full width
+        }
+        else {
             w = [self widthForLabelOrEditorForTab:tab];
             tabWidth = (w > longestRequested ? longestRequested : w);
         }
@@ -872,7 +870,7 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
             [labelEditor setFrameOrigin:NSMakePoint(accumulatedX + 1.0,STDYOFFSET)];
         }
         
-        tab.coreWidth = roundf(tabWidth);
+        [tab setStartX:roundf(accumulatedX) width:roundf(tabWidth)];
         accumulatedX = accumulatedX + tabWidth + self.spacerWidth;
     }
     self.geometryIsInvalid = NO;
@@ -914,8 +912,8 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
     if (self.doubleClickEditEnabled && (cnt > 1) && self.currentRollover) {
         
         BOOL allowed = YES;
-        if (self.delegate && [self.delegate respondsToSelector:@selector(editingWillBeginForTabAtIndex:)]) {  // delegate check
-            allowed = [self.delegate editingWillBeginForTabAtIndex:rolloverIndex];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(tabView:editingShouldBeginForTabAtIndex:)]) {  // delegate check
+            allowed = [self.delegate tabView:self editingShouldBeginForTabAtIndex:rolloverIndex];
         }
         
         if (allowed) {
@@ -927,7 +925,7 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
 
     // Postprocess - redraw as needed
     if (displayDirty) {
-        [self setAllTabWidthsAndStartPos];
+        [self reassignTabPoistionAndTrackingArea];
     }
 }
 
@@ -961,7 +959,7 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
     
     // Postprocess - redraw as needed
     if (displayDirty) {
-        [self setAllTabWidthsAndStartPos];
+        [self reassignTabPoistionAndTrackingArea];
     }
 }
 
@@ -978,8 +976,8 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
         if (draggedDist >= 4) {  // begin drag after sqrt(4) distance
             
             // Check with delegate
-            if (self.delegate && [self.delegate respondsToSelector:@selector(draggingWillBeginForTabWithIndex:)]) {
-                if (![self.delegate draggingWillBeginForTabWithIndex:[self indexForRolloverTab]]) {
+            if (self.delegate && [self.delegate respondsToSelector:@selector(tabView:draggingShouldBeginForTabWithIndex:)]) {
+                if (![self.delegate tabView:self draggingShouldBeginForTabWithIndex:[self indexForRolloverTab]]) {
                     return;
                 }
             }
@@ -1004,7 +1002,7 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
     
     [labelEditor setString:editedTab.label];
     [self.window makeFirstResponder:self.window];
-    [self setAllTabWidthsAndStartPos];
+    [self reassignTabPoistionAndTrackingArea];
     [self setNeedsDisplay:YES];
 }
 
@@ -1304,14 +1302,14 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
     
     BOOL success = (operation == NSDragOperationMove ? YES : NO);
 
-    if (success && dragInProgress) {  // The move ewas successful and the insert and remove operation has not been short circuited
+    if (success && dragInProgress) {  // The move eas successful and the insert and remove operation has not been short circuited
 
         [self removeTabAtIndex:[self.tabs indexOfObject:dragSourceTab]];
     }
     
     // Inform delegate
-    if (self.delegate && [self.delegate respondsToSelector:@selector(draggingFinishedForTabWithLabel:tag:success:)]) {
-        [self.delegate draggingFinishedForTabWithLabel:dragSourceTab.label tag:dragSourceTab.tag success:success];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(tabView:draggingDidFinishForTabWithLabel:tag:success:)]) {
+        [self.delegate tabView:self draggingDidFinishForTabWithLabel:dragSourceTab.label tag:dragSourceTab.tag success:success];
     }
 
     dragSourceTab = nil;
@@ -1447,10 +1445,10 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
         return NO;
     }
     
-    // There is a valid dragString in Ask delegate if ok to insert
+    // There is a valid dragString - Ask delegate if ok to insert
     NSString *ds =[ar firstObject];
-    if (self.delegate && [self.delegate respondsToSelector:@selector(draggedTabWillBeInsertedAtIndex:withLabel:tag:sourceExternal:)]) {
-        return [self.delegate draggedTabWillBeInsertedAtIndex:(dragInsertPoint+1) withLabel:[self labelFromDragString:ds] tag:[self tagFromDragString:ds] sourceExternal:([sender draggingSource] ? NO : YES)];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(tabView:draggedTabWillBeInsertedWithIndex:label:tag:sourceExternal:)]) {
+        return [self.delegate tabView:self draggedTabWillBeInsertedWithIndex:(dragInsertPoint+1) label:[self labelFromDragString:ds] tag:[self tagFromDragString:ds] sourceExternal:([sender draggingSource] ? NO : YES)];
     }
     
     return YES;  // Default return if no delegate method
@@ -1537,8 +1535,8 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
         _selectedTab = _selectedTab + 1;
         [self didChangeValueForKey:@"selectedTab"];
         
-        if (self.delegate && [self.delegate respondsToSelector:@selector(selectedTabChangedIndexTo:)]) {
-            [self.delegate selectedTabChangedIndexTo:self.selectedTab];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(tabView:selectedTabChangedIndexTo:)]) {
+            [self.delegate tabView:self selectedTabChangedIndexTo:self.selectedTab];
         }
     }
     
@@ -1579,8 +1577,8 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
         _selectedTab = _selectedTab - 1;
         [self didChangeValueForKey:@"selectedTab"];
         
-        if (self.delegate && [self.delegate respondsToSelector:@selector(selectedTabChangedIndexTo:)]) {
-            [self.delegate selectedTabChangedIndexTo:self.selectedTab];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(tabView:selectedTabChangedIndexTo:)]) {
+            [self.delegate tabView: self selectedTabChangedIndexTo:self.selectedTab];
         }
     }
     
@@ -1636,8 +1634,8 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
         _selectedTab = newSelected;
         [self didChangeValueForKey:@"selectedTab"];
         
-        if (self.delegate && [self.delegate respondsToSelector:@selector(selectedTabChangedIndexTo:)]) {
-            [self.delegate selectedTabChangedIndexTo:newSelected];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(tabView:selectedTabChangedIndexTo:)]) {
+            [self.delegate tabView:self selectedTabChangedIndexTo:newSelected];
         }
     }
     
@@ -1698,8 +1696,8 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
         return YES;
     }
 
-    if (self.delegate && [self.delegate respondsToSelector:@selector(labelWillChangeTo:forTabAtIndex:)]) {
-        if (![self.delegate labelWillChangeTo:label forTabAtIndex:index]) {
+    if (self.delegate && [self.delegate respondsToSelector:@selector(tabView:labelShouldChangeTo:forTabAtIndex:)]) {
+        if (![self.delegate tabView:self labelShouldChangeTo:label forTabAtIndex:index]) {
             return NO;  // Abort if delegate denies change
         }
     }
@@ -1707,8 +1705,8 @@ NSString const * BSTDragStringHeader = @"bst.tabview.1.0";
     tab.label = label;
 
     
-    if (self.delegate && [self.delegate respondsToSelector:@selector(labelDidChangeForTabAtIndex:)]) {
-        [self.delegate labelDidChangeForTabAtIndex:index];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(tabView:labelDidChangeForTabAtIndex:)]) {
+        [self.delegate tabView:self labelDidChangeForTabAtIndex:index];
     }
     
     self.geometryIsInvalid = YES;

@@ -48,39 +48,39 @@
 
 #pragma mark - TabView Delegate methods
 
--(BOOL)tabWithIndexWillBecomeSelected:(NSInteger)index{
+-(BOOL)tabView:(BSTTabView *)tabView tabWithIndexShouldBecomeSelected:(NSInteger)index {
     
     return YES;
 }
 
 
--(void)tabWithIndexDidBecomeSelected:(NSInteger)index {
+-(void)tabView:(BSTTabView *)tabView tabWithIndexDidBecomeSelected:(NSInteger)index {
     
     
     NSLog(@"Tab no %li did become selected",index);
 }
 
 
--(void)selectedTabChangedIndexTo:(NSInteger)index{
+-(void)tabView:(BSTTabView *)tabView selectedTabChangedIndexTo:(NSInteger)index {
     
     NSLog(@"%@: Selected tab changed index to %li",self.tag, index);
 }
 
 
--(BOOL)labelWillChangeTo:(NSString *)newLabel forTabAtIndex:(NSUInteger)index{
+-(BOOL)tabView:(BSTTabView *)tabView labelShouldChangeTo:(NSString *)newLabel forTabAtIndex:(NSUInteger)index{
     
     return YES;
 }
 
 
--(void)spaceIsInsufficientToDisplayAllTabs {
+-(void)insufficientWidthForTabView:(BSTTabView *)tabView {
     
     NSLog(@"%@: Space is insufficient message received", self.tag);
 }
 
 
 
--(BOOL)editingWillBeginForTabAtIndex:(NSUInteger)index {
+-(BOOL)tabView:(BSTTabView *)tabView editingShouldBeginForTabAtIndex:(NSUInteger)index {
     
     NSString *dict = [self.tabView tagForTabAtIndex:index];
     if (dict && [dict isEqualToString:@"addKey"]) {  // The + tab was clicked
@@ -90,13 +90,13 @@
 }
 
 
--(void)labelDidChangeForTabAtIndex:(NSUInteger)index {
+-(void)tabView:(BSTTabView *)tabView labelDidChangeForTabAtIndex:(NSUInteger)index {
     
     NSLog(@"%@: Label of tab %lu changed to %@",self.tag, index,[self.tabView labelForTabAtIndex:index] );
 }
 
 
--(BOOL)draggingWillBeginForTabWithIndex:(NSUInteger)index {
+-(BOOL)tabView:(BSTTabView *)tabView draggingShouldBeginForTabWithIndex:(NSUInteger)index {
     
     NSLog(@"%@: Dragging will begin for tab %ld",self.tag, (long)index);
     
@@ -108,13 +108,13 @@
     return YES;
 }
 
--(void)draggingFinishedForTabWithLabel:(NSString *)label tag:(NSString *)tag success:(BOOL)success{
+-(void)tabView:(BSTTabView *)tabView draggingDidFinishForTabWithLabel:(NSString *)label tag:(NSString *)tag success:(BOOL)success{
     
     NSLog(@"%@: Dragging of %@ ended with %@",self.tag, label, (success ? @"success" : @"failure"));
 }
 
 
--(BOOL)draggedTabWillBeInsertedAtIndex:(NSUInteger)index withLabel:(NSString *)label tag:(NSString *)tag sourceExternal:(BOOL)external {
+-(BOOL)tabView:(BSTTabView *)tabView draggedTabWillBeInsertedWithIndex:(NSUInteger)index label:(NSString *)label tag:(NSString *)tag sourceExternal:(BOOL)external  {
     
     NSLog(@"%@: Dragged tab will be inserted at index %ld",self.tag, index);
     
