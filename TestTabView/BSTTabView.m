@@ -10,10 +10,12 @@
 
 @class           BSTTabViewTab;
 
-NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length must not change, some methods have the length of this string hard coded
-
-#define          MINTABWIDTH           15.0
-#define          STDYOFFSET             2.0
+static NSString const * const BSTDragStringHeader         = @"bst.tabview.1.0";  //If updated length must not change, some methods have the length of this string hard coded
+static CGFloat  const         BSTminTabWidth              = 15.0;
+static CGFloat const          BSTstdYTextOffset           = 2.0;
+static CGFloat const          BSTstdTextPadding           = 2.0;
+static CGFloat const          BSTeditorExtraPadding       = 2.0;
+static CGFloat const          BSTsmallTabHeightThreshold  = 10.0;
 
 
 
@@ -157,10 +159,10 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
     CGFloat w = 0.0;
     if (self.label) {
         NSSize size = [self.label sizeWithAttributes:self.owner.defaultTextOptions];
-        w = size.width + 2.0;
+        w = size.width + (BSTstdTextPadding * 2);
     }
     
-    return (w < MINTABWIDTH ? MINTABWIDTH : w); // never less than min
+    return (w < BSTminTabWidth ? BSTminTabWidth : w); // never less than min
 }
 
 
@@ -260,7 +262,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
     [boundaryCurve fill];
     
     // Make a rect for text, height as required for font if possible but never more than height of tab - 4 (2 top + 2 bottom margin)
-    NSRect textRect = NSMakeRect(self.startX + 1.0, STDYOFFSET, self.coreWidth -1.0, ((currentTabHt < (self.owner.preferredTextHeight-4)) ? (currentTabHt-4) : self.owner.preferredTextHeight));
+    NSRect textRect = NSMakeRect(self.startX + BSTstdTextPadding, BSTstdYTextOffset, self.coreWidth - BSTstdTextPadding, ((currentTabHt < (self.owner.preferredTextHeight-(2 * BSTstdYTextOffset))) ? (currentTabHt-(2 * BSTstdYTextOffset)) : self.owner.preferredTextHeight));
     [self.label drawInRect:textRect withAttributes:txtAttr];
     
     [borderColor set];
@@ -351,7 +353,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
     _userTabDraggingEnabled = BSTTabViewDragNone;
     
     _spacerWidth = 5.0;
-    _tabHeight = ((self.bounds.size.height > 10.0) ? (self.bounds.size.height -5.0) : self.bounds.size.height-2.0);
+    _tabHeight = ((self.bounds.size.height > BSTsmallTabHeightThreshold) ? (self.bounds.size.height -5.0) : self.bounds.size.height-2.0);
     _tabCornerRadius = 1.0;
 
     style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
@@ -752,7 +754,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
             baseX = tab.startX + tab.coreWidth + (self.spacerWidth / 2);
         }
         
-        if (currentHeight < 10) {  // The small insert
+        if (currentHeight < BSTsmallTabHeightThreshold) {  // The small insert
             
             pt.x = baseX;
             pt.y = 0;
@@ -811,7 +813,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
 -(void)reassignTabPositionAndTrackingArea{
     
     CGFloat totalRequested = self.spacerWidth;      // Start with one spacer width to the left side
-    CGFloat longestRequested = MINTABWIDTH + 1.0;   // Strat value > min width, in case all tabs are shorter than min to prevent warning for insufficinet size
+    CGFloat longestRequested = BSTminTabWidth + 1.0;   // Start value > min width, in case all tabs are shorter than min to prevent warning for insufficinet size
     CGFloat tabWidth;
     CGFloat w;
     BSTTabViewTab *tab;
@@ -828,7 +830,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
     }
     
     // Compress space if required (until it fits or all tabs are smaller or equal to min)
-    while ((totalRequested > currentWidth) && (longestRequested > MINTABWIDTH)) {
+    while ((totalRequested > currentWidth) && (longestRequested > BSTminTabWidth)) {
         
         longestRequested = longestRequested - 1.0;
         totalRequested = self.spacerWidth;
@@ -846,7 +848,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
         } // end for
     }  // end while - max allowed longestRequested has now been calculated
     
-    if (longestRequested <= MINTABWIDTH) {  // Not all will fit even with compression display will be truncated - notify delegate
+    if (longestRequested <= BSTminTabWidth) {  // Not all will fit even with compression display will be truncated - notify delegate
        if (self.delegate && [self.delegate respondsToSelector:@selector(insufficientWidthForTabView:)]) {
             [self.delegate insufficientWidthForTabView:self];
         }
@@ -867,7 +869,7 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
         }
         
         if (tab == editedTab) {  // Editing is ongoing, align the editor start
-            [labelEditor setFrameOrigin:NSMakePoint(accumulatedX + 1.0,STDYOFFSET)];
+            [labelEditor setFrameOrigin:NSMakePoint(accumulatedX + BSTstdTextPadding,BSTstdYTextOffset)];
         }
         
         [tab setStartX:roundf(accumulatedX) width:roundf(tabWidth)];
@@ -884,14 +886,13 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
     
     CGFloat wlabel = [tab widthForLabelString];
     
-    // ask owner for width of field editor, will be -1 if field editor is not assigned to this tab
     CGFloat weditor;
     if (editedTab != tab) { // This is not the edited tab
         weditor = -1.0;
     } else {
     // Edit in progress for the requested tab
       NSRect rect = labelEditor.frame;
-      weditor = rect.size.width + 2.0;
+      weditor = rect.size.width + BSTeditorExtraPadding;
     }
     
     return (weditor > wlabel ? weditor : wlabel);  // take the max
@@ -1030,8 +1031,8 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
     editedTab = [self.tabs objectAtIndex:index];
     tv.string = editedTab.label;         // Set text
     
-    CGFloat w = editedTab.coreWidth + 2.0; // Slightly larger to fit the cursor
-    CGFloat h = (self.tabHeight < (self.preferredTextHeight-4)) ? (self.tabHeight-4) : self.preferredTextHeight; // Text height or tab ht - 4 whichever is less
+    CGFloat w = editedTab.coreWidth + BSTeditorExtraPadding; // Slightly larger to fit the cursor
+    CGFloat h = (self.tabHeight < (self.preferredTextHeight-(2 * BSTstdYTextOffset))) ? (self.tabHeight-(2 * BSTstdYTextOffset)) : self.preferredTextHeight; // Text height or tab ht - 4 whichever is less
     [tv setFrameSize:NSMakeSize(w,h)];
     // x poistion is set in owner draw method to match location of tab
     
@@ -1162,15 +1163,17 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
 
 -(BOOL)validateDragString:(NSString *)dragString{
     
+    NSInteger dragHeaderLength = BSTDragStringHeader.length;
+
     
-    if (!dragString || (dragString.length < 27)) {// Check min length 15+1+4+1+4+1+1
+    if (!dragString || (dragString.length < dragHeaderLength + 12)) {// Check min length headerLength+1+4+1+4+1+1
         return NO;
     }
     NSString *s;
     NSRange r;
     
     // Check header
-    r = NSMakeRange(0, 15);
+    r = NSMakeRange(0, dragHeaderLength);
     s = [dragString substringWithRange:r];  // Extract header
     if (![BSTDragStringHeader isEqualToString:s]) {  // invalid dragString
         return NO;
@@ -1179,24 +1182,16 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
     NSCharacterSet *unwantedCharacters = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
 
     // Check index
-    r = NSMakeRange(16, 4);
+    r = NSMakeRange(dragHeaderLength + 1, 4);
     s = [dragString substringWithRange:r];  // Extract index
-    
-    if ([s length] != 4) {
-        return NO;
-    }
     
     if ([s rangeOfCharacterFromSet:unwantedCharacters].location != NSNotFound) {
         return NO;
     }
     
     // Check label length
-    r = NSMakeRange(21, 4);
+    r = NSMakeRange(dragHeaderLength + 6, 4);
     s = [dragString substringWithRange:r];  // Extract label length
-    
-    if ([s length] != 4) {
-        return NO;
-    }
     
     if ([s rangeOfCharacterFromSet:unwantedCharacters].location != NSNotFound) {
         return NO;
@@ -1209,10 +1204,12 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
 
 -(NSInteger)indexFromDragString:(NSString *)dragString{
     
+    NSInteger dragHeaderLength = BSTDragStringHeader.length;
+    
     if (![self validateDragString:dragString]) {
         return -1;
     }
-    NSRange r = NSMakeRange(16, 4);
+    NSRange r = NSMakeRange(dragHeaderLength + 1, 4);
     NSString *s =[dragString substringWithRange:r];
 
     return [s integerValue];
@@ -1222,10 +1219,12 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
 
 -(NSString*)labelFromDragString:(NSString *)dragString{
 
+    NSInteger dragHeaderLength = BSTDragStringHeader.length;
+
     if (![self validateDragString:dragString]) {
         return nil;
     }
-    NSRange r = NSMakeRange(21, 4);
+    NSRange r = NSMakeRange(dragHeaderLength + 6, 4);
     NSString *s =[dragString substringWithRange:r];
     
     NSInteger len = [s integerValue];
@@ -1234,11 +1233,11 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
         return @"";
     }
     
-    if ([dragString length] < (27 + len)) {  // Something is wrong
+    if ([dragString length] < (dragHeaderLength + 12 + len)) {  // Something is wrong
         return nil;
     }
     
-    r = NSMakeRange(26, len);
+    r = NSMakeRange(dragHeaderLength + 11, len);
     return [dragString substringWithRange:r];
 }
 
@@ -1246,19 +1245,21 @@ NSString const *BSTDragStringHeader  = @"bst.tabview.1.0";  //If updated length 
 
 -(NSString*)tagFromDragString:(NSString *)dragString{
     
+    NSInteger dragHeaderLength = BSTDragStringHeader.length;
+
     if (![self validateDragString:dragString]) {
         return nil;
     }
-    NSRange r = NSMakeRange(21, 4);
+    NSRange r = NSMakeRange(dragHeaderLength + 6, 4);
     NSString *s =[dragString substringWithRange:r];
     
     NSInteger len = [s integerValue];
     
-    if ([dragString length] <= (27 + len)) {  // Something is wrong or there were no tag
+    if ([dragString length] <= (dragHeaderLength + 12 + len)) {  // Something is wrong or there were no tag
         return nil;
     }
     
-    r = NSMakeRange( 27+len, ([dragString length] - (27+len)) );
+    r = NSMakeRange( dragHeaderLength + 12 +len, ([dragString length] - (dragHeaderLength + 12 +len)) );
     return [dragString substringWithRange:r];
 }
 
